@@ -133,3 +133,106 @@ export const create = async ({
 
   return result.rows[0];
 };
+
+export const update = async (
+  id,
+  {
+    name,
+    description,
+    categoryId,
+    material,
+    color,
+    size,
+    price,
+    stock,
+    status,
+    isFeatured,
+    isPublished,
+  }
+) => {
+  const query = `
+    UPDATE products
+    SET
+      name = $1,
+      description = $2,
+      category_id = $3,
+      material = $4,
+      color = $5,
+      size = $6,
+      price = $7,
+      stock = $8,
+      status = $9,
+      is_featured = $10,
+      is_published = $11,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $12
+    RETURNING
+      id,
+      code,
+      name,
+      description,
+      category_id,
+      material,
+      color,
+      size,
+      price,
+      stock,
+      status,
+      is_featured,
+      is_published,
+      is_active,
+      created_at,
+      updated_at
+  `;
+
+  const values = [
+    name,
+    description,
+    categoryId,
+    material,
+    color,
+    size,
+    price,
+    stock,
+    status,
+    isFeatured,
+    isPublished,
+    id,
+  ];
+
+  const result = await pool.query(query, values);
+
+  return result.rows[0] ?? null;
+};
+
+export const deactivate = async (id) => {
+  const query = `
+    UPDATE products
+    SET
+      is_active = false,
+      is_published = false,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING
+      id,
+      code,
+      name,
+      description,
+      category_id,
+      material,
+      color,
+      size,
+      price,
+      stock,
+      status,
+      is_featured,
+      is_published,
+      is_active,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [id]);
+
+  return result.rows[0] ?? null;
+};

@@ -46,3 +46,45 @@ export const createProduct = async (req, res) => {
     data: product,
   });
 };
+
+export const updateProduct = async (req, res) => {
+  const productId = parseProductId(req.params.id);
+
+  if (!productId) {
+    return res.status(400).json({
+      status: "error",
+      message: "El ID del producto no es válido",
+    });
+  }
+
+  const product = await productService.updateProduct(
+    productId,
+    req.body
+  );
+
+  res.status(200).json({
+    status: "success",
+    message: "Producto actualizado correctamente",
+    data: product,
+  });
+};
+
+export const deactivateProduct = async (req, res) => {
+  const productId = parseProductId(req.params.id);
+
+  if (!productId) {
+    return res.status(400).json({
+      status: "error",
+      message: "El ID del producto no es válido",
+    });
+  }
+
+  const product =
+    await productService.deactivateProduct(productId);
+
+  res.status(200).json({
+    status: "success",
+    message: "Producto desactivado correctamente",
+    data: product,
+  });
+};
