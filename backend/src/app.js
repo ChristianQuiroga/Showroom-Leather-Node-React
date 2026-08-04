@@ -1,5 +1,6 @@
 import express from "express";
 
+import categoryRoutes from "./routes/category.routes.js";
 import { notFoundHandler } from "./middlewares/notFound.middleware.js";
 import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 
@@ -14,10 +15,9 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-
+app.use("/api/categories", categoryRoutes);
 // Debe ir después de todas las rutas existentes.
 app.use(notFoundHandler);
-
 // Debe ser el último middleware.
 app.use(errorHandler);
 
