@@ -3,6 +3,39 @@ import * as productImageRepository from "../repositories/productImage.repository
 
 import { AppError } from "../utils/AppError.js";
 
+import {
+  deleteCloudinaryImage,
+  uploadImageBuffer,
+} from "./cloudinary.service.js";
+const parseOptionalBoolean = (value, defaultValue = false) => {
+  if (value === undefined) {
+    return defaultValue;
+  }
+
+  if (value === true || value === "true") {
+    return true;
+  }
+
+  if (value === false || value === "false") {
+    return false;
+  }
+
+  throw new AppError("El campo isMain debe ser booleano", 400);
+};
+
+const parseDisplayOrder = (value) => {
+  const numericValue = Number(value ?? 0);
+
+  if (!Number.isInteger(numericValue) || numericValue < 0) {
+    throw new AppError(
+      "El orden de visualización debe ser un número entero mayor o igual a cero",
+      400,
+    );
+  }
+
+  return numericValue;
+};
+
 const validateProductForImageChanges = async (productId) => {
   const product = await productRepository.findById(productId);
 
@@ -52,12 +85,14 @@ export const getProductImages = async (productId) => {
 
 export const addProductImage = async (
   productId,
-  { imageUrl, publicId, altText, isMain, displayOrder },
+  { fileBuffer, altText, isMain, displayOrder },
 ) => {
   await validateProductForImageChanges(productId);
 
-  const normalizedUrl = normalizeImageUrl(imageUrl);
-  const normalizedPublicId = publicId?.trim() || null;
+  if (!fileBuffer) {
+    throw new AppError("Debe seleccionar una imagen", 400);
+  }
+
   const normalizedAltText = altText?.trim() || null;
 
   if (normalizedAltText && normalizedAltText.length > 200) {
@@ -67,41 +102,58 @@ export const addProductImage = async (
     );
   }
 
-  if (isMain !== undefined && typeof isMain !== "boolean") {
-    throw new AppError("El campo isMain debe ser booleano", 400);
-  }
+  const parsedIsMain = parseOptionalBoolean(isMain, false);
 
-  const numericDisplayOrder = Number(displayOrder ?? 0);
-
-  if (!Number.isInteger(numericDisplayOrder) || numericDisplayOrder < 0) {
-    throw new AppError(
-      "El orden de visualización debe ser un número entero mayor o igual a cero",
-      400,
-    );
-  }
-
-  const duplicatedImage = await productImageRepository.findByUrl(
-    productId,
-    normalizedUrl,
-  );
-
-  if (duplicatedImage) {
-    throw new AppError("La imagen ya está asociada a este producto", 409);
-  }
+  const numericDisplayOrder = parseDisplayOrder(displayOrder);
 
   const imageCount = await productImageRepository.countByProductId(productId);
 
-  // La primera imagen siempre será la principal.
-  const shouldBeMain = imageCount === 0 ? true : (isMain ?? false);
+  // La primera imagen será siempre la principal.
+  const shouldBeMain = imageCount === 0 ? true : parsedIsMain;
 
-  return productImageRepository.create({
-    productId,
-    imageUrl: normalizedUrl,
-    publicId: normalizedPublicId,
-    altText: normalizedAltText,
-    isMain: shouldBeMain,
-    displayOrder: numericDisplayOrder,
-  });
+  let cloudinaryResult;
+
+  try {
+    cloudinaryResult = await uploadImageBuffer(fileBuffer, {
+      folder: `showroom-leather/products/${productId}`,
+      transformation: [
+        {
+          width: 1600,
+          height: 1600,
+          crop: "limit",
+          quality: "auto",
+          fetch_format: "auto",
+        },
+      ],
+    });
+
+    return await productImageRepository.create({
+      productId,
+      imageUrl: cloudinaryResult.secure_url,
+      publicId: cloudinaryResult.public_id,
+      altText: normalizedAltText,
+      isMain: shouldBeMain,
+      displayOrder: numericDisplayOrder,
+    });
+  } catch (error) {
+    /*
+     * Si Cloudinary subió la imagen, pero falló el registro
+     * en PostgreSQL, intentamos eliminar el archivo para no
+     * dejar una imagen huérfana.
+     */
+    if (cloudinaryResult?.public_id) {
+      try {
+        await deleteCloudinaryImage(cloudinaryResult.public_id);
+      } catch (cleanupError) {
+        console.error(
+          "No se pudo limpiar la imagen de Cloudinary:",
+          cleanupError.message,
+        );
+      }
+    }
+
+    throw error;
+  }
 };
 
 export const setProductMainImage = async (productId, imageId) => {
@@ -133,6 +185,20 @@ export const deleteProductImage = async (productId, imageId) => {
 
   if (!image) {
     throw new AppError("La imagen no existe o no pertenece al producto", 404);
+  }
+
+  if (image.public_id) {
+    const cloudinaryResult = await deleteCloudinaryImage(image.public_id);
+
+    if (
+      cloudinaryResult.result !== "ok" &&
+      cloudinaryResult.result !== "not found"
+    ) {
+      throw new AppError(
+        "No se pudo eliminar la imagen del almacenamiento",
+        502,
+      );
+    }
   }
 
   return productImageRepository.remove(productId, imageId);

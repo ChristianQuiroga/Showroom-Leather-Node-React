@@ -38,11 +38,23 @@ export const addProductImage = async (req, res) => {
     });
   }
 
-  const image = await productImageService.addProductImage(productId, req.body);
+  if (!req.file) {
+    return res.status(400).json({
+      status: "error",
+      message: "Debe seleccionar una imagen",
+    });
+  }
+
+  const image = await productImageService.addProductImage(productId, {
+    fileBuffer: req.file.buffer,
+    altText: req.body.altText,
+    isMain: req.body.isMain,
+    displayOrder: req.body.displayOrder,
+  });
 
   res.status(201).json({
     status: "success",
-    message: "Imagen agregada correctamente",
+    message: "Imagen subida correctamente",
     data: image,
   });
 };

@@ -27,5 +27,6 @@ export const uploadImageBuffer = async (buffer, options = {}) => {
 export const deleteCloudinaryImage = async (publicId) => {
   return cloudinary.uploader.destroy(publicId, {
     resource_type: "image",
+    invalidate: true,
   });
 };

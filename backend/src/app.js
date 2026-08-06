@@ -5,9 +5,6 @@ import productRoutes from "./routes/product.routes.js";
 import { notFoundHandler } from "./middlewares/notFound.middleware.js";
 import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 
-import { uploadProductImage } from "./middlewares/upload.middleware.js";
-import { uploadImageBuffer } from "./services/cloudinary.service.js";
-
 const app = express();
 
 app.use(express.json());
@@ -22,28 +19,6 @@ app.get("/api/health", (req, res) => {
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 
-//temporalmente para probar la subida de imágenes a Cloudinary
-app.post("/api/test-cloudinary", uploadProductImage, async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({
-      status: "error",
-      message: "Debe seleccionar una imagen",
-    });
-  }
-
-  const result = await uploadImageBuffer(req.file.buffer);
-
-  res.status(201).json({
-    status: "success",
-    data: {
-      secureUrl: result.secure_url,
-      publicId: result.public_id,
-      width: result.width,
-      height: result.height,
-      format: result.format,
-    },
-  });
-});
 // Debe ir después de todas las rutas existentes.
 app.use(notFoundHandler);
 // Debe ser el último middleware.
