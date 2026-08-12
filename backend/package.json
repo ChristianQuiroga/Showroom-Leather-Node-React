@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch src --watch .env --ext js,json,env src/server.js",
     "start": "node src/server.js",
+    "create:admin": "node src/scripts/create-admin.js",
     "migrate:create": "node-pg-migrate create",
     "migrate:up": "node --env-file=.env ./node_modules/node-pg-migrate/bin/node-pg-migrate up",
     "migrate:down": "node --env-file=.env ./node_modules/node-pg-migrate/bin/node-pg-migrate down",
@@ -22,9 +23,11 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
     "pg": "^8.22.0"
   },

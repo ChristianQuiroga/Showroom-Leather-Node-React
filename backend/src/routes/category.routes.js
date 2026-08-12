@@ -8,12 +8,20 @@ import {
   updateCategory,
 } from "../controllers/category.controller.js";
 
+import {
+  authenticate,
+  authorizeAdmin,
+} from "../middlewares/auth.middleware.js";
+
 const router = Router();
 
+// Públicas
 router.get("/", getAllCategories);
 router.get("/:id", getCategoryById);
-router.post("/", createCategory);
-router.put("/:id", updateCategory);
-router.delete("/:id", deactivateCategory);
+
+// Solo Admin
+router.post("/", authenticate, authorizeAdmin, createCategory);
+router.put("/:id", authenticate, authorizeAdmin, updateCategory);
+router.delete("/:id", authenticate, authorizeAdmin, deactivateCategory);
 
 export default router;
