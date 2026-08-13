@@ -10,25 +10,19 @@ const parseProductId = (id) => {
   return productId;
 };
 
-// export const getAllProducts = async (req, res) => {
-//   const products = await productService.getAllProducts();
-
-//   res.status(200).json({
-//     status: "success",
-//     data: products,
-//   });
-// };
 export const getAllProducts = async (req, res, next) => {
   try {
-    const { categoryId, status, search } = req.query; // Obtener los parámetros de consulta
+    const { categoryId, status, search, page, limit } = req.query;
 
-    const products = await productService.getAllProducts({
+    const result = await productService.getAllProducts({
       categoryId,
       status,
       search,
+      page,
+      limit,
     });
 
-    res.status(200).json(products);
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }

@@ -102,10 +102,16 @@ const normalizeAndValidateProductData = async ({
   };
 };
 
-export const getAllProducts = async ({ categoryId, status, search } = {}) => {
+export const getAllProducts = async ({
+  categoryId,
+  status,
+  search,
+  page = 1,
+  limit = 12,
+} = {}) => {
   let categoryIdNumber;
 
-  // Validar categoryId si se proporciona
+  // Validar el parámetro categoryId
   if (categoryId) {
     categoryIdNumber = Number(categoryId);
 
@@ -114,7 +120,7 @@ export const getAllProducts = async ({ categoryId, status, search } = {}) => {
     }
   }
 
-  // Validar status si se proporciona
+  // Validar el parámetro status
   const validStatuses = ["available", "reserved", "sold", "unpublished"];
 
   if (status && !validStatuses.includes(status)) {
@@ -124,10 +130,28 @@ export const getAllProducts = async ({ categoryId, status, search } = {}) => {
     );
   }
 
+  // Validar los parámetros page y limit
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+
+  if (!Number.isInteger(pageNumber) || pageNumber <= 0) {
+    throw new AppError("page debe ser un número entero positivo", 400);
+  }
+
+  if (!Number.isInteger(limitNumber) || limitNumber <= 0 || limitNumber > 50) {
+    throw new AppError("limit debe ser un número entero entre 1 y 50", 400);
+  }
+
+  // Calcular el offset para la paginación
+  const offset = (pageNumber - 1) * limitNumber;
+
   return productRepository.findAll({
     categoryId: categoryIdNumber,
     status,
     search,
+    limit: limitNumber,
+    offset,
+    page: pageNumber,
   });
 };
 

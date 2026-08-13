@@ -20,20 +20,7 @@ const productFields = `
   p.updated_at
 `;
 
-// export const findAll = async () => {
-//   const query = `
-//     SELECT ${productFields}
-//     FROM products p
-//     INNER JOIN categories c
-//       ON c.id = p.category_id
-//     ORDER BY p.created_at DESC
-//   `;
-
-//   const result = await pool.query(query);
-
-//   return result.rows;
-// };
-export const findAll = async ({ categoryId, status, search } = {}) => {
+export const findAll = async ({categoryId,status,search,limit,offset,page,} = {}) => {
   const conditions = ["p.is_active = true", "p.is_published = true"];
 
   const values = [];
@@ -53,18 +40,56 @@ export const findAll = async ({ categoryId, status, search } = {}) => {
     conditions.push(`p.name ILIKE $${values.length}`);
   }
 
-  const query = `
+  const whereClause = `
+    WHERE ${conditions.join(" AND ")}
+  `;
+
+  // Consulta de productos paginados
+  const dataValues = [...values];
+
+  dataValues.push(limit);
+  const limitPosition = dataValues.length;
+
+  dataValues.push(offset);
+  const offsetPosition = dataValues.length;
+
+  const dataQuery = `
     SELECT ${productFields}
     FROM products p
     INNER JOIN categories c
       ON c.id = p.category_id
-    WHERE ${conditions.join(" AND ")}
+    ${whereClause}
     ORDER BY p.created_at DESC
+    LIMIT $${limitPosition}
+    OFFSET $${offsetPosition}
   `;
 
-  const result = await pool.query(query, values);
+  const dataResult = await pool.query(dataQuery, dataValues);
 
-  return result.rows;
+  // Consulta para conocer el total
+  const countQuery = `
+    SELECT COUNT(*)::int AS total
+    FROM products p
+    INNER JOIN categories c
+      ON c.id = p.category_id
+    ${whereClause}
+  `;
+
+  const countResult = await pool.query(countQuery, values);
+
+  const total = countResult.rows[0].total;
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: dataResult.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  };
 };
 
 export const findById = async (id) => {
