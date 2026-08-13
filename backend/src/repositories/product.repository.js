@@ -20,16 +20,49 @@ const productFields = `
   p.updated_at
 `;
 
-export const findAll = async () => {
+// export const findAll = async () => {
+//   const query = `
+//     SELECT ${productFields}
+//     FROM products p
+//     INNER JOIN categories c
+//       ON c.id = p.category_id
+//     ORDER BY p.created_at DESC
+//   `;
+
+//   const result = await pool.query(query);
+
+//   return result.rows;
+// };
+export const findAll = async ({ categoryId, status, search } = {}) => {
+  const conditions = ["p.is_active = true", "p.is_published = true"];
+
+  const values = [];
+
+  if (categoryId) {
+    values.push(categoryId);
+    conditions.push(`p.category_id = $${values.length}`);
+  }
+
+  if (status) {
+    values.push(status);
+    conditions.push(`p.status = $${values.length}`);
+  }
+
+  if (search) {
+    values.push(`%${search}%`);
+    conditions.push(`p.name ILIKE $${values.length}`);
+  }
+
   const query = `
     SELECT ${productFields}
     FROM products p
     INNER JOIN categories c
       ON c.id = p.category_id
+    WHERE ${conditions.join(" AND ")}
     ORDER BY p.created_at DESC
   `;
 
-  const result = await pool.query(query);
+  const result = await pool.query(query, values);
 
   return result.rows;
 };
@@ -148,7 +181,7 @@ export const update = async (
     status,
     isFeatured,
     isPublished,
-  }
+  },
 ) => {
   const query = `
     UPDATE products

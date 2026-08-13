@@ -10,13 +10,28 @@ const parseProductId = (id) => {
   return productId;
 };
 
-export const getAllProducts = async (req, res) => {
-  const products = await productService.getAllProducts();
+// export const getAllProducts = async (req, res) => {
+//   const products = await productService.getAllProducts();
 
-  res.status(200).json({
-    status: "success",
-    data: products,
-  });
+//   res.status(200).json({
+//     status: "success",
+//     data: products,
+//   });
+// };
+export const getAllProducts = async (req, res, next) => {
+  try {
+    const { categoryId, status, search } = req.query; // Obtener los parámetros de consulta
+
+    const products = await productService.getAllProducts({
+      categoryId,
+      status,
+      search,
+    });
+
+    res.status(200).json(products);
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getProductById = async (req, res) => {
@@ -57,10 +72,7 @@ export const updateProduct = async (req, res) => {
     });
   }
 
-  const product = await productService.updateProduct(
-    productId,
-    req.body
-  );
+  const product = await productService.updateProduct(productId, req.body);
 
   res.status(200).json({
     status: "success",
@@ -79,8 +91,7 @@ export const deactivateProduct = async (req, res) => {
     });
   }
 
-  const product =
-    await productService.deactivateProduct(productId);
+  const product = await productService.deactivateProduct(productId);
 
   res.status(200).json({
     status: "success",

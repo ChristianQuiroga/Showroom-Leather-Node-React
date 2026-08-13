@@ -1,7 +1,9 @@
 import * as productRepository from "../repositories/product.repository.js";
+
 import * as categoryRepository from "../repositories/category.repository.js";
 
 import { AppError } from "../utils/AppError.js";
+
 import { generateProductCode } from "../utils/productCode.js";
 
 const validStatuses = ["available", "reserved", "sold", "unpublished"];
@@ -100,8 +102,33 @@ const normalizeAndValidateProductData = async ({
   };
 };
 
-export const getAllProducts = async () => {
-  return productRepository.findAll();
+export const getAllProducts = async ({ categoryId, status, search } = {}) => {
+  let categoryIdNumber;
+
+  // Validar categoryId si se proporciona
+  if (categoryId) {
+    categoryIdNumber = Number(categoryId);
+
+    if (!Number.isInteger(categoryIdNumber) || categoryIdNumber <= 0) {
+      throw new AppError("categoryId debe ser un número entero positivo", 400);
+    }
+  }
+
+  // Validar status si se proporciona
+  const validStatuses = ["available", "reserved", "sold", "unpublished"];
+
+  if (status && !validStatuses.includes(status)) {
+    throw new AppError(
+      "Status inválido. Valores permitidos: available, reserved, sold, unpublished",
+      400,
+    );
+  }
+
+  return productRepository.findAll({
+    categoryId: categoryIdNumber,
+    status,
+    search,
+  });
 };
 
 export const getProductById = async (id) => {
