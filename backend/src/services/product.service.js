@@ -6,6 +6,8 @@ import { AppError } from "../utils/AppError.js";
 
 import { generateProductCode } from "../utils/productCode.js";
 
+import { buildWhatsAppUrl } from "../utils/whatsapp.js";
+
 const validStatuses = ["available", "reserved", "sold", "unpublished"];
 const normalizeAndValidateProductData = async ({
   name,
@@ -111,7 +113,6 @@ export const getAllProducts = async ({
 } = {}) => {
   let categoryIdNumber;
 
-  // Validar el parámetro categoryId
   if (categoryId) {
     categoryIdNumber = Number(categoryId);
 
@@ -120,7 +121,7 @@ export const getAllProducts = async ({
     }
   }
 
-  // Validar el parámetro status
+  // Validar el estado si se proporciona
   const validStatuses = ["available", "reserved", "sold", "unpublished"];
 
   if (status && !validStatuses.includes(status)) {
@@ -130,7 +131,7 @@ export const getAllProducts = async ({
     );
   }
 
-  // Validar los parámetros page y limit
+  // Validar y convertir page y limit a números
   const pageNumber = Number(page);
   const limitNumber = Number(limit);
 
@@ -145,7 +146,7 @@ export const getAllProducts = async ({
   // Calcular el offset para la paginación
   const offset = (pageNumber - 1) * limitNumber;
 
-  return productRepository.findAll({
+  const result = await productRepository.findAll({
     categoryId: categoryIdNumber,
     status,
     search,
@@ -153,6 +154,17 @@ export const getAllProducts = async ({
     offset,
     page: pageNumber,
   });
+
+  // Agregar la URL de WhatsApp a cada producto
+  const productsWithWhatsApp = result.data.map((product) => ({
+    ...product,
+    whatsappUrl: buildWhatsAppUrl(product),
+  }));
+
+  return {
+    ...result,
+    data: productsWithWhatsApp,
+  };
 };
 
 export const getProductById = async (id) => {
@@ -162,7 +174,10 @@ export const getProductById = async (id) => {
     throw new AppError("Producto no encontrado", 404);
   }
 
-  return product;
+  return {
+    ...product,
+    whatsappUrl: buildWhatsAppUrl(product),
+  };
 };
 
 export const createProduct = async (productData) => {
