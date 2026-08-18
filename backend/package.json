@@ -10,7 +10,8 @@
     "migrate:create": "node-pg-migrate create",
     "migrate:up": "node --env-file=.env ./node_modules/node-pg-migrate/bin/node-pg-migrate up",
     "migrate:down": "node --env-file=.env ./node_modules/node-pg-migrate/bin/node-pg-migrate down",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "seed": "node src/seeds/seed.js"
   },
   "jest": {
     "testEnvironment": "node"
