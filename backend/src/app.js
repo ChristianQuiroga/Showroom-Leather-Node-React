@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors"; // Importa el paquete cors para habilitar CORS en la aplicación
 
 import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
@@ -16,6 +17,8 @@ app.get("/api/health", (req, res) => {
     message: "Showroom Leather API funcionando correctamente",
   });
 });
+
+app.use(cors({ origin: "http://localhost:5173" }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
