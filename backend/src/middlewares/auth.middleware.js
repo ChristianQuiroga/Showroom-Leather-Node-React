@@ -11,7 +11,7 @@ export const authenticate = (req, res, next) => {
       throw new AppError("Token no proporcionado", 401);
     }
 
-    const [type, token] = authHeader.split(" ");
+    const [type, token] = authHeader.trim().split(/\s+/);
 
     if (type !== "Bearer" || !token) {
       throw new AppError("Formato de token inválido", 401);

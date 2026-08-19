@@ -1,6 +1,7 @@
 import { Readable } from "node:stream";
 
 import cloudinary from "../config/cloudinary.js";
+import { AppError } from "../utils/AppError.js";
 
 export const uploadImageBuffer = async (buffer, options = {}) => {
   return new Promise((resolve, reject) => {
@@ -12,12 +13,19 @@ export const uploadImageBuffer = async (buffer, options = {}) => {
       },
       (error, result) => {
         if (error) {
-          reject(error);
-          return;
+          return reject(
+            new AppError("No se pudo subir la imagen a Cloudinary", 502)
+          );
+        }
+
+        if (!result?.secure_url || !result?.public_id) {
+          return reject(
+            new AppError("Cloudinary devolvió una respuesta inválida", 502)
+          );
         }
 
         resolve(result);
-      },
+      }
     );
 
     Readable.from(buffer).pipe(uploadStream);
@@ -25,8 +33,28 @@ export const uploadImageBuffer = async (buffer, options = {}) => {
 };
 
 export const deleteCloudinaryImage = async (publicId) => {
-  return cloudinary.uploader.destroy(publicId, {
-    resource_type: "image",
-    invalidate: true,
-  });
+  try {
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: "image",
+      invalidate: true,
+    });
+
+    if (!["ok", "not found"].includes(result.result)) {
+      throw new AppError(
+        "No se pudo eliminar la imagen de Cloudinary",
+        502
+      );
+    }
+
+    return result;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError(
+      "Error al comunicarse con Cloudinary",
+      502
+    );
+  }
 };

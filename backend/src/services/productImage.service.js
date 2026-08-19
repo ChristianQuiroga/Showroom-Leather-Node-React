@@ -7,6 +7,7 @@ import {
   deleteCloudinaryImage,
   uploadImageBuffer,
 } from "./cloudinary.service.js";
+
 const parseOptionalBoolean = (value, defaultValue = false) => {
   if (value === undefined) {
     return defaultValue;
@@ -53,26 +54,6 @@ const validateProductForImageChanges = async (productId) => {
   return product;
 };
 
-const normalizeImageUrl = (imageUrl) => {
-  const normalizedUrl = imageUrl?.trim();
-
-  if (!normalizedUrl) {
-    throw new AppError("La URL de la imagen es obligatoria", 400);
-  }
-
-  try {
-    const parsedUrl = new URL(normalizedUrl);
-
-    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-      throw new Error();
-    }
-  } catch {
-    throw new AppError("La URL de la imagen no es válida", 400);
-  }
-
-  return normalizedUrl;
-};
-
 export const getProductImages = async (productId) => {
   const product = await productRepository.findById(productId);
 
@@ -103,7 +84,6 @@ export const addProductImage = async (
   }
 
   const parsedIsMain = parseOptionalBoolean(isMain, false);
-
   const numericDisplayOrder = parseDisplayOrder(displayOrder);
 
   const imageCount = await productImageRepository.countByProductId(productId);
@@ -188,18 +168,19 @@ export const deleteProductImage = async (productId, imageId) => {
   }
 
   if (image.public_id) {
-    const cloudinaryResult = await deleteCloudinaryImage(image.public_id);
-
-    if (
-      cloudinaryResult.result !== "ok" &&
-      cloudinaryResult.result !== "not found"
-    ) {
-      throw new AppError(
-        "No se pudo eliminar la imagen del almacenamiento",
-        502,
-      );
-    }
+    await deleteCloudinaryImage(image.public_id);
   }
 
-  return productImageRepository.remove(productId, imageId);
+  try {
+    return await productImageRepository.remove(productId, imageId);
+  } catch (error) {
+    console.error(
+      `La imagen fue eliminada de Cloudinary pero no pudo eliminarse de PostgreSQL. imageId=${imageId}`,
+    );
+
+    throw new AppError(
+      "La imagen fue eliminada del almacenamiento, pero ocurrió un error al actualizar la base de datos",
+      500,
+    );
+  }
 };
