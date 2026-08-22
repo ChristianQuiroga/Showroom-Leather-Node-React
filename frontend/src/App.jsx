@@ -16,8 +16,10 @@ function App() {
   const [status, setStatus] = useState("");
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
-  // Load products when search, status or category changes
+  // Load products when filters or page change
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -25,9 +27,11 @@ function App() {
           search,
           status,
           categoryId,
+          page,
         });
 
         setProducts(response.data);
+        setPagination(response.pagination);
         setError("");
       } catch (error) {
         setError(error.message);
@@ -37,7 +41,7 @@ function App() {
     };
 
     loadProducts();
-  }, [search, status, categoryId]);
+  }, [search, status, categoryId, page]);
 
   // Load categories on component mount
   useEffect(() => {
@@ -82,12 +86,18 @@ function App() {
           type="text"
           placeholder="Buscar producto..."
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setPage(1);
+          }}
         />
 
         <select
           value={status}
-          onChange={(event) => setStatus(event.target.value)}
+          onChange={(event) => {
+            setStatus(event.target.value);
+            setPage(1);
+          }}
         >
           <option value="">Todos los estados</option>
           <option value="available">Disponible</option>
@@ -98,7 +108,10 @@ function App() {
 
         <select
           value={categoryId}
-          onChange={(event) => setCategoryId(event.target.value)}
+          onChange={(event) => {
+            setCategoryId(event.target.value);
+            setPage(1);
+          }}
         >
           <option value="">Todas las categorías</option>
 
@@ -112,11 +125,35 @@ function App() {
         {products.length === 0 ? (
           <p>No hay productos disponibles.</p>
         ) : (
-          <div className="product-list">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="product-list">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {pagination && pagination.totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={() => setPage((prev) => prev - 1)}
+                  disabled={pagination.page === 1}
+                >
+                  Anterior
+                </button>
+
+                <span>
+                  Página {pagination.page} de {pagination.totalPages}
+                </span>
+
+                <button
+                  onClick={() => setPage((prev) => prev + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
     </main>

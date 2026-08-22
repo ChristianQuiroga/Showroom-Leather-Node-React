@@ -4,6 +4,8 @@ export const getProducts = async ({
   search = "",
   status = "",
   categoryId = "",
+  page = 1,
+  limit = 4, // temporario
 } = {}) => {
   const params = new URLSearchParams();
 
@@ -19,6 +21,13 @@ export const getProducts = async ({
     params.append("categoryId", categoryId);
   }
 
+  if (page) {
+    params.append("page", page);
+  }
+  // temporario
+  if (limit) {
+    params.append("limit", limit);
+  }
   const query = params.toString();
 
   const url = query ? `${API_URL}/products?${query}` : `${API_URL}/products`;
