@@ -1,7 +1,29 @@
 const API_URL = "http://localhost:3000/api";
 
-export const getProducts = async () => {
-  const response = await fetch(`${API_URL}/products`);
+export const getProducts = async ({
+  search = "",
+  status = "",
+  categoryId = "",
+} = {}) => {
+  const params = new URLSearchParams();
+
+  if (search) {
+    params.append("search", search);
+  }
+
+  if (status) {
+    params.append("status", status);
+  }
+
+  if (categoryId) {
+    params.append("categoryId", categoryId);
+  }
+
+  const query = params.toString();
+
+  const url = query ? `${API_URL}/products?${query}` : `${API_URL}/products`;
+
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error("No se pudieron obtener los productos");

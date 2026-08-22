@@ -33,6 +33,24 @@
   background: #fff;
 }
 
+.product-card__image {
+  width: 100%;
+  height: 260px;
+  object-fit: contain;
+  display: block;
+  background: #f3f3f3;
+}
+
+.product-card__placeholder {
+  width: 100%;
+  height: 260px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f3f3f3;
+  color: #777;
+}
+
 .product-card__content {
   padding: 1rem;
   text-align: left;

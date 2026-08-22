@@ -17,10 +17,18 @@ const productFields = `
   p.is_published,
   p.is_active,
   p.created_at,
-  p.updated_at
+  p.updated_at,
+  pi.image_url AS main_image_url
 `;
 
-export const findAll = async ({categoryId,status,search,limit,offset,page,} = {}) => {
+export const findAll = async ({
+  categoryId,
+  status,
+  search,
+  limit,
+  offset,
+  page,
+} = {}) => {
   const conditions = ["p.is_active = true", "p.is_published = true"];
 
   const values = [];
@@ -37,7 +45,13 @@ export const findAll = async ({categoryId,status,search,limit,offset,page,} = {}
 
   if (search) {
     values.push(`%${search}%`);
-    conditions.push(`p.name ILIKE $${values.length}`);
+
+    conditions.push(`
+    (
+      unaccent(p.name) ILIKE unaccent($${values.length})
+      OR unaccent(p.description) ILIKE unaccent($${values.length})
+    )
+  `);
   }
 
   const whereClause = `
@@ -54,15 +68,18 @@ export const findAll = async ({categoryId,status,search,limit,offset,page,} = {}
   const offsetPosition = dataValues.length;
 
   const dataQuery = `
-    SELECT ${productFields}
-    FROM products p
-    INNER JOIN categories c
-      ON c.id = p.category_id
-    ${whereClause}
-    ORDER BY p.created_at DESC
-    LIMIT $${limitPosition}
-    OFFSET $${offsetPosition}
-  `;
+  SELECT ${productFields}
+  FROM products p
+  INNER JOIN categories c
+    ON c.id = p.category_id
+  LEFT JOIN product_images pi
+    ON pi.product_id = p.id
+    AND pi.is_main = true
+  ${whereClause}
+  ORDER BY p.created_at DESC
+  LIMIT $${limitPosition}
+  OFFSET $${offsetPosition}
+`;
 
   const dataResult = await pool.query(dataQuery, dataValues);
 
@@ -98,6 +115,9 @@ export const findById = async (id) => {
     FROM products p
     INNER JOIN categories c
       ON c.id = p.category_id
+    LEFT JOIN product_images pi
+      ON pi.product_id = p.id
+      AND pi.is_main = true
     WHERE p.id = $1
   `;
 
