@@ -8,6 +8,8 @@ import ProductCard from "./components/ProductCard.jsx";
 
 import { getCategories } from "./services/categoryService";
 
+import ProductDetail from "./components/ProductDetail.jsx";
+
 function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +20,7 @@ function App() {
   const [categoryId, setCategoryId] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
   // Load products when filters or page change
   useEffect(() => {
@@ -74,6 +77,15 @@ function App() {
     );
   }
 
+  if (selectedProductId) {
+    return (
+      <ProductDetail
+        productId={selectedProductId}
+        onBack={() => setSelectedProductId(null)}
+      />
+    );
+  }
+
   return (
     <main className="app">
       <h1>Showroom Leather</h1>
@@ -122,13 +134,19 @@ function App() {
           ))}
         </select>
 
+        <p>Producto seleccionado: {selectedProductId}</p>
+
         {products.length === 0 ? (
           <p>No hay productos disponibles.</p>
         ) : (
           <>
             <div className="product-list">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onSelect={() => setSelectedProductId(product.id)}
+                />
               ))}
             </div>
 

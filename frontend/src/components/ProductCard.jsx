@@ -17,9 +17,9 @@ const formatStatus = (status) => {
   return statuses[status] || status;
 };
 
-function ProductCard({ product }) {
+function ProductCard({ product, onSelect }) {
   return (
-    <article className="product-card">
+    <article className="product-card" onClick={onSelect}>
       {product.main_image_url ? (
         <img
           className="product-card__image"
@@ -27,32 +27,26 @@ function ProductCard({ product }) {
           alt={product.name}
         />
       ) : (
-        <div className="product-card__placeholder">
-          Sin imagen
-        </div>
+        <div className="product-card__placeholder">Sin imagen</div>
       )}
 
       <div className="product-card__content">
         <h3>{product.name}</h3>
 
         <p>
-          <strong>Precio:</strong>{" "}
-          {formatPrice(product.price)}
+          <strong>Precio:</strong> {formatPrice(product.price)}
         </p>
 
         <p>
-          <strong>Color:</strong>{" "}
-          {product.color || "Sin especificar"}
+          <strong>Color:</strong> {product.color || "Sin especificar"}
         </p>
 
         <p>
-          <strong>Talle:</strong>{" "}
-          {product.size || "Sin especificar"}
+          <strong>Talle:</strong> {product.size || "Sin especificar"}
         </p>
 
         <p>
-          <strong>Estado:</strong>{" "}
-          {formatStatus(product.status)}
+          <strong>Estado:</strong> {formatStatus(product.status)}
         </p>
       </div>
     </article>
