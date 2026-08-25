@@ -50,3 +50,22 @@ export const getProductById = async (id) => {
 
   return response.json();
 };
+
+export const createProduct = async (product, token) => {
+  const response = await fetch(`${API_URL}/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(product),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "No se pudo crear el producto");
+  }
+
+  return data;
+};

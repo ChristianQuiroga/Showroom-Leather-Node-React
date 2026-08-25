@@ -10,6 +10,12 @@ import { getCategories } from "./services/categoryService";
 
 import ProductDetail from "./components/ProductDetail.jsx";
 
+import Login from "./pages/Login.jsx";
+
+import { login } from "./services/authService.js";
+
+import ProductForm from "./pages/ProductForm.jsx";
+
 function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +27,26 @@ function App() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [showProductForm, setShowProductForm] = useState(false);
+
+  const handleLogin = async ({ email, password }) => {
+    const response = await login({
+      email,
+      password,
+    });
+
+    localStorage.setItem("token", response.token);
+    setToken(response.token);
+
+    setShowLogin(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+  };
 
   // Load products when filters or page change
   useEffect(() => {
@@ -86,53 +112,81 @@ function App() {
     );
   }
 
+  if (showLogin) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  if (showProductForm) {
+    return (
+      <ProductForm
+        token={token}
+        categories={categories}
+        onBack={() => setShowProductForm(false)}
+      />
+    );
+  }
+
   return (
     <main className="app">
       <h1>Showroom Leather</h1>
       <p>Catálogo de artículos de cuero</p>
 
+      {token ? (
+        <>
+          <button onClick={() => setShowProductForm(true)}>
+            Nuevo producto
+          </button>
+
+          <button onClick={handleLogout}>Cerrar sesión</button>
+        </>
+      ) : (
+        <button onClick={() => setShowLogin(true)}>Administrar</button>
+      )}
+
       <section>
         <h2>Productos</h2>
 
-        <input
-          type="text"
-          placeholder="Buscar producto..."
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setPage(1);
-          }}
-        />
+        <div className="product-filters">
+          <input
+            type="text"
+            placeholder="Buscar producto..."
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
 
-        <select
-          value={status}
-          onChange={(event) => {
-            setStatus(event.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="">Todos los estados</option>
-          <option value="available">Disponible</option>
-          <option value="reserved">Reservado</option>
-          <option value="sold">Vendido</option>
-          <option value="unpublished">No publicado</option>
-        </select>
+          <select
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Todos los estados</option>
+            <option value="available">Disponible</option>
+            <option value="reserved">Reservado</option>
+            <option value="sold">Vendido</option>
+            <option value="unpublished">No publicado</option>
+          </select>
 
-        <select
-          value={categoryId}
-          onChange={(event) => {
-            setCategoryId(event.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="">Todas las categorías</option>
+          <select
+            value={categoryId}
+            onChange={(event) => {
+              setCategoryId(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Todas las categorías</option>
 
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <p>Producto seleccionado: {selectedProductId}</p>
 
