@@ -1,20 +1,16 @@
 import { useEffect, useState } from "react";
 
-import { getProducts } from "./services/productService.js";
-
-import "./App.css";
-
 import ProductCard from "./components/ProductCard.jsx";
-
-import { getCategories } from "./services/categoryService";
-
 import ProductDetail from "./components/ProductDetail.jsx";
 
 import Login from "./pages/Login.jsx";
+import ProductForm from "./pages/ProductForm.jsx";
 
+import { getProducts } from "./services/productService.js";
+import { getCategories } from "./services/categoryService";
 import { login } from "./services/authService.js";
 
-import ProductForm from "./pages/ProductForm.jsx";
+import "./App.css";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -187,8 +183,6 @@ function App() {
             ))}
           </select>
         </div>
-
-        <p>Producto seleccionado: {selectedProductId}</p>
 
         {products.length === 0 ? (
           <p>No hay productos disponibles.</p>
