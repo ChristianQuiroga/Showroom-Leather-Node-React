@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  activateCategory,
   createCategory,
   deactivateCategory,
   getAllCategories,
@@ -23,5 +24,6 @@ router.get("/:id", getCategoryById);
 router.post("/", authenticate, authorizeAdmin, createCategory);
 router.put("/:id", authenticate, authorizeAdmin, updateCategory);
 router.delete("/:id", authenticate, authorizeAdmin, deactivateCategory);
+router.patch("/:id/activate", authenticate, authorizeAdmin, activateCategory);
 
 export default router;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function Login({ onLogin }) {
+function Login({ onLogin, onBack }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,6 +27,10 @@ function Login({ onLogin }) {
   return (
     <main className="login-page">
       <section className="login-card">
+        <button type="button" onClick={onBack}>
+          Volver
+        </button>
+
         <h1>Administración</h1>
         <p>Ingresá con tu cuenta de administrador</p>
 

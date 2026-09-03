@@ -5,6 +5,8 @@ import ProductDetail from "./components/ProductDetail.jsx";
 
 import Login from "./pages/Login.jsx";
 import ProductForm from "./pages/ProductForm.jsx";
+import CategoryManager from "./pages/CategoryManager.jsx";
+import ProductImageManager from "./pages/ProductImageManager.jsx";
 
 import { getProducts } from "./services/productService.js";
 import { getCategories } from "./services/categoryService";
@@ -26,6 +28,10 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [showProductForm, setShowProductForm] = useState(false);
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [refreshProducts, setRefreshProducts] = useState(0);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [imageProductId, setImageProductId] = useState(null);
 
   const handleLogin = async ({ email, password }) => {
     const response = await login({
@@ -66,7 +72,7 @@ function App() {
     };
 
     loadProducts();
-  }, [search, status, categoryId, page]);
+  }, [search, status, categoryId, page, refreshProducts]);
 
   // Load categories on component mount
   useEffect(() => {
@@ -109,7 +115,7 @@ function App() {
   }
 
   if (showLogin) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} />;
   }
 
   if (showProductForm) {
@@ -117,7 +123,32 @@ function App() {
       <ProductForm
         token={token}
         categories={categories}
-        onBack={() => setShowProductForm(false)}
+        productId={editingProductId}
+        onSaved={() => setRefreshProducts((prev) => prev + 1)}
+        onBack={() => {
+          setShowProductForm(false);
+          setEditingProductId(null);
+        }}
+      />
+    );
+  }
+
+  if (showCategoryManager) {
+    return (
+      <CategoryManager
+        token={token}
+        onBack={() => setShowCategoryManager(false)}
+      />
+    );
+  }
+
+  if (imageProductId) {
+    return (
+      <ProductImageManager
+        productId={imageProductId}
+        token={token}
+        onSaved={() => setRefreshProducts((prev) => prev + 1)}
+        onBack={() => setImageProductId(null)}
       />
     );
   }
@@ -129,8 +160,17 @@ function App() {
 
       {token ? (
         <>
-          <button onClick={() => setShowProductForm(true)}>
+          <button
+            onClick={() => {
+              setEditingProductId(null);
+              setShowProductForm(true);
+            }}
+          >
             Nuevo producto
+          </button>
+
+          <button onClick={() => setShowCategoryManager(true)}>
+            Gestionar categorías
           </button>
 
           <button onClick={handleLogout}>Cerrar sesión</button>
@@ -194,6 +234,17 @@ function App() {
                   key={product.id}
                   product={product}
                   onSelect={() => setSelectedProductId(product.id)}
+                  onEdit={
+                    token
+                      ? () => {
+                          setEditingProductId(product.id);
+                          setShowProductForm(true);
+                        }
+                      : null
+                  }
+                  onManageImages={
+                    token ? () => setImageProductId(product.id) : null
+                  }
                 />
               ))}
             </div>

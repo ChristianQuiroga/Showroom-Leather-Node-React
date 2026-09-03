@@ -121,3 +121,24 @@ export const deactivate = async (id) => {
 
   return result.rows[0] ?? null;
 };
+
+export const activate = async (id) => {
+  const query = `
+    UPDATE categories
+    SET
+      is_active = true,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING
+      id,
+      name,
+      description,
+      is_active,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [id]);
+
+  return result.rows[0] ?? null;
+};

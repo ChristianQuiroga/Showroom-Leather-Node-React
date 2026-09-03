@@ -89,3 +89,17 @@ export const deactivateCategory = async (id) => {
 
   return categoryRepository.deactivate(id);
 };
+
+export const activateCategory = async (id) => {
+  const existingCategory = await categoryRepository.findById(id);
+
+  if (!existingCategory) {
+    throw new AppError("Categoría no encontrada", 404);
+  }
+
+  if (existingCategory.is_active) {
+    throw new AppError("La categoría ya se encuentra activa", 409);
+  }
+
+  return categoryRepository.activate(id);
+};

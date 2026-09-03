@@ -81,3 +81,22 @@ export const deactivateCategory = async (req, res) => {
     data: category,
   });
 };
+
+export const activateCategory = async (req, res) => {
+  const categoryId = parseCategoryId(req.params.id);
+
+  if (!categoryId) {
+    return res.status(400).json({
+      status: "error",
+      message: "El ID de la categoría no es válido",
+    });
+  }
+
+  const category = await categoryService.activateCategory(categoryId);
+
+  res.status(200).json({
+    status: "success",
+    message: "Categoría activada correctamente",
+    data: category,
+  });
+};

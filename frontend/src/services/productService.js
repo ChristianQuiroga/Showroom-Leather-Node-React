@@ -69,3 +69,22 @@ export const createProduct = async (product, token) => {
 
   return data;
 };
+
+export const updateProduct = async (id, product, token) => {
+  const response = await fetch(`${API_URL}/products/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(product),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "No se pudo actualizar el producto");
+  }
+
+  return data;
+};

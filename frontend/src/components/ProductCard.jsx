@@ -17,7 +17,7 @@ const formatStatus = (status) => {
   return statuses[status] || status;
 };
 
-function ProductCard({ product, onSelect }) {
+function ProductCard({ product, onSelect, onEdit, onManageImages }) {
   return (
     <article className="product-card" onClick={onSelect}>
       {product.main_image_url ? (
@@ -48,6 +48,29 @@ function ProductCard({ product, onSelect }) {
         <p>
           <strong>Estado:</strong> {formatStatus(product.status)}
         </p>
+
+        {onEdit && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit();
+            }}
+          >
+            Editar
+          </button>
+        )}
+        {onManageImages && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onManageImages();
+            }}
+          >
+            Gestionar imágenes
+          </button>
+        )}
       </div>
     </article>
   );
