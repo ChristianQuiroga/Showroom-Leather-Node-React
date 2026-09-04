@@ -32,6 +32,7 @@ function App() {
   const [refreshProducts, setRefreshProducts] = useState(0);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [imageProductId, setImageProductId] = useState(null);
+  const hasActiveFilters = Boolean(search || status || categoryId);
 
   const handleLogin = async ({ email, password }) => {
     const response = await login({
@@ -48,6 +49,13 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setToken(null);
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setStatus("");
+    setCategoryId("");
+    setPage(1);
   };
 
   // Load products when filters or page change
@@ -222,6 +230,10 @@ function App() {
               </option>
             ))}
           </select>
+
+          <button onClick={handleClearFilters} disabled={!hasActiveFilters}>
+            Limpiar filtros
+          </button>
         </div>
 
         {products.length === 0 ? (
