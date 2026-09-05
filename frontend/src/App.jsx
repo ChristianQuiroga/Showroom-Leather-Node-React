@@ -5,6 +5,7 @@ import ProductDetail from "./components/ProductDetail.jsx";
 
 import Login from "./pages/Login.jsx";
 import ProductForm from "./pages/ProductForm.jsx";
+import ProductManager from "./pages/ProductManager.jsx";
 import CategoryManager from "./pages/CategoryManager.jsx";
 import ProductImageManager from "./pages/ProductImageManager.jsx";
 
@@ -31,6 +32,7 @@ function App() {
   const [editingProductId, setEditingProductId] = useState(null);
   const [refreshProducts, setRefreshProducts] = useState(0);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [showProductManager, setShowProductManager] = useState(false);
   const [imageProductId, setImageProductId] = useState(null);
   const hasActiveFilters = Boolean(search || status || categoryId);
 
@@ -161,6 +163,21 @@ function App() {
     );
   }
 
+  if (showProductManager) {
+    return (
+      <ProductManager
+        token={token}
+        categories={categories}
+        onEdit={(productId) => {
+          setEditingProductId(productId);
+          setShowProductForm(true);
+        }}
+        onManageImages={(productId) => setImageProductId(productId)}
+        onBack={() => setShowProductManager(false)}
+      />
+    );
+  }
+
   return (
     <main className="app">
       <h1>Showroom Leather</h1>
@@ -175,6 +192,10 @@ function App() {
             }}
           >
             Nuevo producto
+          </button>
+
+          <button onClick={() => setShowProductManager(true)}>
+            Gestionar productos
           </button>
 
           <button onClick={() => setShowCategoryManager(true)}>

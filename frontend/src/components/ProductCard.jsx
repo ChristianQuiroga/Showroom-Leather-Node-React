@@ -17,7 +17,16 @@ const formatStatus = (status) => {
   return statuses[status] || status;
 };
 
-function ProductCard({ product, onSelect, onEdit, onManageImages }) {
+function ProductCard({
+  product,
+  onSelect,
+  onEdit,
+  onManageImages,
+  onActivate,
+  onDeactivate,
+  actionLoading = false,
+  showAdminState = false,
+}) {
   return (
     <article className="product-card" onClick={onSelect}>
       {product.main_image_url ? (
@@ -49,6 +58,19 @@ function ProductCard({ product, onSelect, onEdit, onManageImages }) {
           <strong>Estado:</strong> {formatStatus(product.status)}
         </p>
 
+        {showAdminState && (
+          <>
+            <p>
+              <strong>Registro:</strong>{" "}
+              {product.is_active ? "Activo" : "Inactivo"}
+            </p>
+            <p>
+              <strong>Publicación:</strong>{" "}
+              {product.is_published ? "Publicado" : "No publicado"}
+            </p>
+          </>
+        )}
+
         {onEdit && (
           <button
             type="button"
@@ -69,6 +91,30 @@ function ProductCard({ product, onSelect, onEdit, onManageImages }) {
             }}
           >
             Gestionar imágenes
+          </button>
+        )}
+        {onDeactivate && (
+          <button
+            type="button"
+            disabled={actionLoading}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDeactivate();
+            }}
+          >
+            {actionLoading ? "Desactivando..." : "Desactivar"}
+          </button>
+        )}
+        {onActivate && (
+          <button
+            type="button"
+            disabled={actionLoading}
+            onClick={(event) => {
+              event.stopPropagation();
+              onActivate();
+            }}
+          >
+            {actionLoading ? "Activando..." : "Activar"}
           </button>
         )}
       </div>

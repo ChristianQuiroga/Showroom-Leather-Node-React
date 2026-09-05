@@ -28,8 +28,11 @@ export const findAll = async ({
   limit,
   offset,
   page,
+  publicOnly = true,
 } = {}) => {
-  const conditions = ["p.is_active = true", "p.is_published = true"];
+  const conditions = publicOnly
+    ? ["p.is_active = true", "p.is_published = true"]
+    : [];
 
   const values = [];
 
@@ -54,9 +57,9 @@ export const findAll = async ({
   `);
   }
 
-  const whereClause = `
-    WHERE ${conditions.join(" AND ")}
-  `;
+  const whereClause = conditions.length
+    ? `WHERE ${conditions.join(" AND ")}`
+    : "";
 
   // Consulta de productos paginados
   const dataValues = [...values];
@@ -289,6 +292,37 @@ export const deactivate = async (id) => {
     SET
       is_active = false,
       is_published = false,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING
+      id,
+      code,
+      name,
+      description,
+      category_id,
+      material,
+      color,
+      size,
+      price,
+      stock,
+      status,
+      is_featured,
+      is_published,
+      is_active,
+      created_at,
+      updated_at
+  `;
+
+  const result = await pool.query(query, [id]);
+
+  return result.rows[0] ?? null;
+};
+
+export const activate = async (id) => {
+  const query = `
+    UPDATE products
+    SET
+      is_active = true,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = $1
     RETURNING

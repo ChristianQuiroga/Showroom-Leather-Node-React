@@ -110,10 +110,83 @@ Este hallazgo queda fuera del alcance de SL-31 y debe registrarse para la fase d
 
 Status: Pending
 
+### SL-34 — Gestionar productos inactivos desde administración
+
+**Estado:** Done
+
+#### Requirement
+El administrador debe poder visualizar productos activos e inactivos, desactivarlos y reactivarlos sin afectar el comportamiento del catálogo público.
+
+#### Current State
+- El backend ya soportaba soft delete mediante `DELETE /api/products/:id`.
+- La desactivación establecía `is_active = false` e `is_published = false`.
+- No existía listado administrativo de productos.
+- No existía endpoint de reactivación.
+- El frontend no permitía gestionar productos inactivos.
+
+#### Gap
+- Faltaba listar activos, inactivos, publicados y no publicados en administración.
+- Faltaba reactivación.
+- Faltaban acciones Activar/Desactivar en frontend.
+- Faltaba refetch posterior.
+- Faltaban tests de transición y autorización.
+
+#### Implementación
+Backend:
+- Se agregó `GET /api/products/admin`.
+- El endpoint está protegido por JWT y rol admin.
+- Se agregó `PATCH /api/products/:id/activate`.
+- Reactivar solo cambia `is_active = true`.
+- No se republica automáticamente el producto.
+- Se mantiene el soft delete existente.
+- Se reutilizan búsqueda, filtros y paginación.
+
+Frontend:
+- Se agregó vista administrativa de productos.
+- Se muestran por separado:
+  - estado comercial;
+  - Activo/Inactivo;
+  - Publicado/No publicado.
+- Se agregó acción Desactivar para productos activos.
+- Se agregó acción Activar para productos inactivos.
+- Los productos inactivos no ofrecen Editar ni Gestionar imágenes.
+- Después de activar/desactivar se realiza refetch.
+- Se corrige automáticamente la página si queda fuera de rango.
+- Los errores mantienen visible el listado.
+
+#### Verificación técnica
+- Backend: 2 suites y 25 tests aprobados ✅
+- Frontend `npm run lint` ✅
+- Frontend `npm run build` ✅
+- `git diff --check` ✅
+
+#### Pruebas manuales
+- Catálogo público sin login continúa funcionando ✅
+- Admin puede abrir Gestionar productos ✅
+- Se muestran activos, inactivos, publicados y no publicados ✅
+- Desactivación sin F5 ✅
+- Producto inactivo desaparece del catálogo público ✅
+- Producto inactivo no ofrece Editar ni Gestionar imágenes ✅
+- Reactivación sin F5 ✅
+- Producto reactivado permanece No publicado ✅
+- Editar y Gestionar imágenes reaparecen al reactivar ✅
+- Publicación posterior desde Editar funciona según diseño ✅
+- Filtros y paginación ✅
+
+#### Resultado
+SL-34 cumple los Acceptance Criteria definidos para la gestión de productos inactivos.
+
+#### Decisión funcional
+Reactivar un producto no lo publica automáticamente.
+
+Flujo esperado:
+
+`Activo + Publicado → Inactivo + No publicado → Activo + No publicado → Publicado manualmente desde Editar`
+
+Esto evita publicar nuevamente un producto sin revisión administrativa previa.
+
 ### Revisar persistencia de sesión
 
 Status: Pending
 
-### Gestionar productos inactivos
 
-Status: Pending

@@ -28,6 +28,24 @@ export const getAllProducts = async (req, res, next) => {
   }
 };
 
+export const getAdminProducts = async (req, res, next) => {
+  try {
+    const { categoryId, status, search, page, limit } = req.query;
+
+    const result = await productService.getAdminProducts({
+      categoryId,
+      status,
+      search,
+      page,
+      limit,
+    });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getProductById = async (req, res) => {
   const productId = parseProductId(req.params.id);
 
@@ -90,6 +108,25 @@ export const deactivateProduct = async (req, res) => {
   res.status(200).json({
     status: "success",
     message: "Producto desactivado correctamente",
+    data: product,
+  });
+};
+
+export const activateProduct = async (req, res) => {
+  const productId = parseProductId(req.params.id);
+
+  if (!productId) {
+    return res.status(400).json({
+      status: "error",
+      message: "El ID del producto no es válido",
+    });
+  }
+
+  const product = await productService.activateProduct(productId);
+
+  res.status(200).json({
+    status: "success",
+    message: "Producto activado correctamente",
     data: product,
   });
 };

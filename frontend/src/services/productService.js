@@ -1,34 +1,25 @@
 const API_URL = "http://localhost:3000/api";
 
-export const getProducts = async ({
+const buildProductQuery = ({
   search = "",
   status = "",
   categoryId = "",
   page = 1,
-  limit = 4, // temporario
+  limit = 4,
 } = {}) => {
   const params = new URLSearchParams();
 
-  if (search) {
-    params.append("search", search);
-  }
+  if (search) params.append("search", search);
+  if (status) params.append("status", status);
+  if (categoryId) params.append("categoryId", categoryId);
+  if (page) params.append("page", page);
+  if (limit) params.append("limit", limit);
 
-  if (status) {
-    params.append("status", status);
-  }
+  return params.toString();
+};
 
-  if (categoryId) {
-    params.append("categoryId", categoryId);
-  }
-
-  if (page) {
-    params.append("page", page);
-  }
-  // temporario
-  if (limit) {
-    params.append("limit", limit);
-  }
-  const query = params.toString();
+export const getProducts = async (filters = {}) => {
+  const query = buildProductQuery(filters);
 
   const url = query ? `${API_URL}/products?${query}` : `${API_URL}/products`;
 
@@ -39,6 +30,27 @@ export const getProducts = async ({
   }
 
   return response.json();
+};
+
+export const getAdminProducts = async (filters = {}, token) => {
+  const query = buildProductQuery(filters);
+  const url = query
+    ? `${API_URL}/products/admin?${query}`
+    : `${API_URL}/products/admin`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "No se pudieron obtener los productos");
+  }
+
+  return data;
 };
 
 export const getProductById = async (id) => {
@@ -84,6 +96,40 @@ export const updateProduct = async (id, product, token) => {
 
   if (!response.ok) {
     throw new Error(data.message || "No se pudo actualizar el producto");
+  }
+
+  return data;
+};
+
+export const deactivateProduct = async (id, token) => {
+  const response = await fetch(`${API_URL}/products/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "No se pudo desactivar el producto");
+  }
+
+  return data;
+};
+
+export const activateProduct = async (id, token) => {
+  const response = await fetch(`${API_URL}/products/${id}/activate`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "No se pudo activar el producto");
   }
 
   return data;

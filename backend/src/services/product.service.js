@@ -110,6 +110,7 @@ export const getAllProducts = async ({
   search,
   page = 1,
   limit = 12,
+  publicOnly = true,
 } = {}) => {
   let categoryIdNumber;
 
@@ -153,6 +154,7 @@ export const getAllProducts = async ({
     limit: limitNumber,
     offset,
     page: pageNumber,
+    publicOnly,
   });
 
   // Agregar la URL de WhatsApp a cada producto
@@ -165,6 +167,13 @@ export const getAllProducts = async ({
     ...result,
     data: productsWithWhatsApp,
   };
+};
+
+export const getAdminProducts = async (params = {}) => {
+  return getAllProducts({
+    ...params,
+    publicOnly: false,
+  });
 };
 
 export const getProductById = async (id) => {
@@ -228,4 +237,18 @@ export const deactivateProduct = async (id) => {
   }
 
   return productRepository.deactivate(id);
+};
+
+export const activateProduct = async (id) => {
+  const existingProduct = await productRepository.findById(id);
+
+  if (!existingProduct) {
+    throw new AppError("Producto no encontrado", 404);
+  }
+
+  if (existingProduct.is_active) {
+    throw new AppError("El producto ya se encuentra activo", 409);
+  }
+
+  return productRepository.activate(id);
 };
