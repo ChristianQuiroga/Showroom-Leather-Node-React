@@ -1,10 +1,14 @@
 import request from "supertest";
+import jwt from "jsonwebtoken";
 
 import app from "../src/app.js";
 import pool from "../src/config/database.js";
+import env from "../src/config/env.js";
 
 let adminToken;
+let nonAdminToken;
 let createdProductId;
+let createdProductName;
 
 beforeAll(async () => {
   const loginResponse = await request(app).post("/api/auth/login").send({
@@ -13,6 +17,11 @@ beforeAll(async () => {
   });
 
   adminToken = loginResponse.body.token;
+  nonAdminToken = jwt.sign(
+    { userId: 0, email: "cliente@example.com", role: "customer" },
+    env.jwt.secret,
+    { expiresIn: "5m" },
+  );
 });
 
 describe("Product endpoints", () => {
@@ -120,6 +129,128 @@ describe("Product endpoints", () => {
       expect(response.body.data).toHaveProperty("name", uniqueName);
 
       createdProductId = response.body.data.id;
+      createdProductName = uniqueName;
+    });
+  });
+
+  describe("GET /api/products/admin", () => {
+    test("Debe devolver 401 si no se envía token", async () => {
+      const response = await request(app).get("/api/products/admin");
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    test("Debe devolver 403 si el usuario no es administrador", async () => {
+      const response = await request(app)
+        .get("/api/products/admin")
+        .set("Authorization", `Bearer ${nonAdminToken}`);
+
+      expect(response.statusCode).toBe(403);
+    });
+
+    test("Debe devolver el listado paginado al administrador", async () => {
+      const response = await request(app)
+        .get(
+          `/api/products/admin?search=${encodeURIComponent(createdProductName)}`,
+        )
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body).toHaveProperty("pagination");
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0]).toMatchObject({
+        id: createdProductId,
+        is_active: true,
+        is_published: true,
+      });
+    });
+  });
+
+  describe("Transiciones de actividad del producto", () => {
+    test("Debe proteger la desactivación sin token", async () => {
+      const response = await request(app).delete(
+        `/api/products/${createdProductId}`,
+      );
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    test("Debe desactivar un producto activo", async () => {
+      const response = await request(app)
+        .delete(`/api/products/${createdProductId}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.data).toHaveProperty("is_active", false);
+      expect(response.body.data).toHaveProperty("is_published", false);
+    });
+
+    test("El público no debe listar el producto inactivo", async () => {
+      const response = await request(app).get(
+        `/api/products?search=${encodeURIComponent(createdProductName)}`,
+      );
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.data).toHaveLength(0);
+    });
+
+    test("El administrador debe listar el producto inactivo", async () => {
+      const response = await request(app)
+        .get(
+          `/api/products/admin?search=${encodeURIComponent(createdProductName)}`,
+        )
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0]).toMatchObject({
+        id: createdProductId,
+        is_active: false,
+        is_published: false,
+      });
+    });
+
+    test("Debe devolver 409 al desactivar nuevamente", async () => {
+      const response = await request(app)
+        .delete(`/api/products/${createdProductId}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(409);
+    });
+
+    test("Debe proteger la reactivación sin token", async () => {
+      const response = await request(app).patch(
+        `/api/products/${createdProductId}/activate`,
+      );
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    test("Debe devolver 404 al reactivar un producto inexistente", async () => {
+      const response = await request(app)
+        .patch("/api/products/2147483647/activate")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(404);
+    });
+
+    test("Debe reactivar sin modificar la publicación", async () => {
+      const response = await request(app)
+        .patch(`/api/products/${createdProductId}/activate`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.data).toHaveProperty("is_active", true);
+      expect(response.body.data).toHaveProperty("is_published", false);
+    });
+
+    test("Debe devolver 409 al reactivar nuevamente", async () => {
+      const response = await request(app)
+        .patch(`/api/products/${createdProductId}/activate`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(409);
     });
   });
 });
