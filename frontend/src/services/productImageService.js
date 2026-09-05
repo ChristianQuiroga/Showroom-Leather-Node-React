@@ -1,15 +1,9 @@
-const API_URL = "http://localhost:3000/api";
+import { apiRequest } from "./apiClient.js";
 
 export const getProductImages = async (productId) => {
-  const response = await fetch(`${API_URL}/products/${productId}/images`);
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudieron obtener las imágenes");
-  }
-
-  return data;
+  return apiRequest(`/products/${productId}/images`, {
+    fallbackMessage: "No se pudieron obtener las imágenes",
+  });
 };
 
 export const uploadProductImage = async (
@@ -25,61 +19,26 @@ export const uploadProductImage = async (
     formData.append("altText", altText);
   }
 
-  const response = await fetch(`${API_URL}/products/${productId}/images`, {
+  return apiRequest(`/products/${productId}/images`, {
+    token,
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: formData,
+    fallbackMessage: "No se pudo subir la imagen",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo subir la imagen");
-  }
-
-  return data;
 };
 
 export const setMainProductImage = async (productId, imageId, token) => {
-  const response = await fetch(
-    `${API_URL}/products/${productId}/images/${imageId}/main`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || "No se pudo actualizar la imagen principal",
-    );
-  }
-
-  return data;
+  return apiRequest(`/products/${productId}/images/${imageId}/main`, {
+    token,
+    method: "PATCH",
+    fallbackMessage: "No se pudo actualizar la imagen principal",
+  });
 };
 
 export const deleteProductImage = async (productId, imageId, token) => {
-  const response = await fetch(
-    `${API_URL}/products/${productId}/images/${imageId}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo eliminar la imagen");
-  }
-
-  return data;
+  return apiRequest(`/products/${productId}/images/${imageId}`, {
+    token,
+    method: "DELETE",
+    fallbackMessage: "No se pudo eliminar la imagen",
+  });
 };

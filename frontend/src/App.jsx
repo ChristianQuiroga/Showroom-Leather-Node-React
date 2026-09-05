@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import ProductCard from "./components/ProductCard.jsx";
 import ProductDetail from "./components/ProductDetail.jsx";
@@ -11,7 +11,11 @@ import ProductImageManager from "./pages/ProductImageManager.jsx";
 
 import { getProducts } from "./services/productService.js";
 import { getCategories } from "./services/categoryService";
-import { login } from "./services/authService.js";
+import {
+  getCurrentUser,
+  getTokenExpiration,
+  login,
+} from "./services/authService.js";
 
 import "./App.css";
 
@@ -27,7 +31,10 @@ function App() {
   const [pagination, setPagination] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [token, setToken] = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(() =>
+    Boolean(localStorage.getItem("token")),
+  );
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
   const [refreshProducts, setRefreshProducts] = useState(0);
@@ -36,11 +43,36 @@ function App() {
   const [imageProductId, setImageProductId] = useState(null);
   const hasActiveFilters = Boolean(search || status || categoryId);
 
+  const clearSession = useCallback(() => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setSessionLoading(false);
+    setShowLogin(false);
+    setShowProductForm(false);
+    setEditingProductId(null);
+    setShowCategoryManager(false);
+    setShowProductManager(false);
+    setImageProductId(null);
+  }, []);
+
+  const handleAdminError = useCallback(
+    (requestError) => {
+      if (requestError.status === 401 || requestError.status === 403) {
+        clearSession();
+      }
+    },
+    [clearSession],
+  );
+
   const handleLogin = async ({ email, password }) => {
     const response = await login({
       email,
       password,
     });
+
+    if (response.user?.role !== "admin") {
+      throw new Error("La cuenta no tiene permisos de administrador");
+    }
 
     localStorage.setItem("token", response.token);
     setToken(response.token);
@@ -48,10 +80,7 @@ function App() {
     setShowLogin(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-  };
+  const handleLogout = clearSession;
 
   const handleClearFilters = () => {
     setSearch("");
@@ -59,6 +88,62 @@ function App() {
     setCategoryId("");
     setPage(1);
   };
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+
+    if (!storedToken) return;
+
+    let ignore = false;
+
+    const validateStoredSession = async () => {
+      try {
+        const response = await getCurrentUser(storedToken);
+        const user = response.user;
+
+        if (!user?.is_active || user.role !== "admin") {
+          if (!ignore) clearSession();
+          return;
+        }
+
+        if (!ignore) {
+          setToken(storedToken);
+        }
+      } catch (validationError) {
+        if (
+          !ignore &&
+          (validationError.status === 401 || validationError.status === 403)
+        ) {
+          clearSession();
+        }
+      } finally {
+        if (!ignore) setSessionLoading(false);
+      }
+    };
+
+    validateStoredSession();
+
+    return () => {
+      ignore = true;
+    };
+  }, [clearSession]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const expiration = getTokenExpiration(token);
+
+    if (!expiration) return;
+
+    const remainingTime = expiration - Date.now();
+
+    const timeoutId = globalThis.setTimeout(
+      clearSession,
+      Math.max(remainingTime, 0),
+    );
+
+    return () => globalThis.clearTimeout(timeoutId);
+  }, [clearSession, token]);
 
   // Load products when filters or page change
   useEffect(() => {
@@ -99,6 +184,14 @@ function App() {
     loadCategories();
   }, []);
 
+  if (sessionLoading) {
+    return (
+      <main className="app">
+        <p>Validando sesión...</p>
+      </main>
+    );
+  }
+
   if (loading) {
     return (
       <main className="app">
@@ -132,6 +225,7 @@ function App() {
     return (
       <ProductForm
         token={token}
+        onAuthError={handleAdminError}
         categories={categories}
         productId={editingProductId}
         onSaved={() => setRefreshProducts((prev) => prev + 1)}
@@ -147,6 +241,7 @@ function App() {
     return (
       <CategoryManager
         token={token}
+        onAuthError={handleAdminError}
         onBack={() => setShowCategoryManager(false)}
       />
     );
@@ -157,6 +252,7 @@ function App() {
       <ProductImageManager
         productId={imageProductId}
         token={token}
+        onAuthError={handleAdminError}
         onSaved={() => setRefreshProducts((prev) => prev + 1)}
         onBack={() => setImageProductId(null)}
       />
@@ -167,6 +263,7 @@ function App() {
     return (
       <ProductManager
         token={token}
+        onAuthError={handleAdminError}
         categories={categories}
         onEdit={(productId) => {
           setEditingProductId(productId);

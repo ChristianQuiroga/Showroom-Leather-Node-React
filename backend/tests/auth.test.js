@@ -1,8 +1,10 @@
 import request from "supertest";
+import jwt from "jsonwebtoken";
 
 import app from "../src/app.js";
 
 import pool from "../src/config/database.js";
+import env from "../src/config/env.js";
 
 describe("Auth endpoints", () => {
   describe("POST /api/auth/login", () => {
@@ -81,6 +83,33 @@ describe("Auth endpoints", () => {
       expect(response.statusCode).toBe(401);
 
       expect(response.body).toHaveProperty("message", "Token inválido");
+    });
+
+    test("Debe devolver 401 si el formato Bearer es inválido", async () => {
+      const response = await request(app)
+        .get("/api/auth/me")
+        .set("Authorization", "Basic token-invalido");
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toHaveProperty(
+        "message",
+        "Formato de token inválido",
+      );
+    });
+
+    test("Debe devolver 401 si el token está expirado", async () => {
+      const expiredToken = jwt.sign(
+        { userId: 1, email: "admin@showroom.com", role: "admin" },
+        env.jwt.secret,
+        { expiresIn: -1 },
+      );
+
+      const response = await request(app)
+        .get("/api/auth/me")
+        .set("Authorization", `Bearer ${expiredToken}`);
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toHaveProperty("message", "Token expirado");
     });
   });
 });

@@ -13,6 +13,7 @@ function ProductManager({
   onBack,
   onEdit,
   onManageImages,
+  onAuthError,
 }) {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
@@ -54,6 +55,7 @@ function ProductManager({
         setError("");
       } catch (requestError) {
         if (!ignore) {
+          onAuthError?.(requestError);
           setError(requestError.message);
         }
       } finally {
@@ -68,7 +70,7 @@ function ProductManager({
     return () => {
       ignore = true;
     };
-  }, [categoryId, page, refreshProducts, search, status, token]);
+  }, [categoryId, onAuthError, page, refreshProducts, search, status, token]);
 
   const handleStateChange = async (product, shouldActivate) => {
     try {
@@ -83,6 +85,7 @@ function ProductManager({
       setMessage(response.message);
       setRefreshProducts((current) => current + 1);
     } catch (requestError) {
+      onAuthError?.(requestError);
       setError(requestError.message);
     } finally {
       setActionProductId(null);

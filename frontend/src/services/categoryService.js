@@ -1,83 +1,47 @@
-const API_URL = "http://localhost:3000/api";
+import { apiRequest } from "./apiClient.js";
 
 export const getCategories = async () => {
-  const response = await fetch(`${API_URL}/categories`);
-
-  if (!response.ok) {
-    throw new Error("No se pudieron obtener las categorías");
-  }
-
-  return response.json();
+  return apiRequest("/categories", {
+    fallbackMessage: "No se pudieron obtener las categorías",
+  });
 };
 
 export const createCategory = async (category, token) => {
-  const response = await fetch(`${API_URL}/categories`, {
+  return apiRequest("/categories", {
+    token,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(category),
+    fallbackMessage: "No se pudo crear la categoría",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo crear la categoría");
-  }
-
-  return data;
 };
 
 export const updateCategory = async (id, category, token) => {
-  const response = await fetch(`${API_URL}/categories/${id}`, {
+  return apiRequest(`/categories/${id}`, {
+    token,
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(category),
+    fallbackMessage: "No se pudo actualizar la categoría",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo actualizar la categoría");
-  }
-
-  return data;
 };
 
 export const deactivateCategory = async (id, token) => {
-  const response = await fetch(`${API_URL}/categories/${id}`, {
+  return apiRequest(`/categories/${id}`, {
+    token,
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    fallbackMessage: "No se pudo desactivar la categoría",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo desactivar la categoría");
-  }
-
-  return data;
 };
 
 export const activateCategory = async (id, token) => {
-  const response = await fetch(`${API_URL}/categories/${id}/activate`, {
+  return apiRequest(`/categories/${id}/activate`, {
+    token,
     method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    fallbackMessage: "No se pudo activar la categoría",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo activar la categoría");
-  }
-
-  return data;
 };

@@ -8,7 +8,7 @@ import {
   activateCategory,
 } from "../services/categoryService.js";
 
-function CategoryManager({ token, onBack }) {
+function CategoryManager({ token, onBack, onAuthError }) {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -22,6 +22,7 @@ function CategoryManager({ token, onBack }) {
       setCategories(response.data);
       setError("");
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     }
   };
@@ -39,6 +40,7 @@ function CategoryManager({ token, onBack }) {
         }
       } catch (error) {
         if (!ignore) {
+          onAuthError?.(error);
           setError(error.message);
         }
       }
@@ -49,7 +51,7 @@ function CategoryManager({ token, onBack }) {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [onAuthError]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -72,6 +74,7 @@ function CategoryManager({ token, onBack }) {
 
       await loadCategories();
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -96,6 +99,7 @@ function CategoryManager({ token, onBack }) {
 
       await loadCategories();
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     }
   };
@@ -111,6 +115,7 @@ function CategoryManager({ token, onBack }) {
 
       await loadCategories();
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     }
   };

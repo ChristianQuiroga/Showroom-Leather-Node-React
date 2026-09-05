@@ -6,7 +6,14 @@ import {
   updateProduct,
 } from "../services/productService.js";
 
-function ProductForm({ token, categories, productId, onSaved, onBack }) {
+function ProductForm({
+  token,
+  categories,
+  productId,
+  onSaved,
+  onBack,
+  onAuthError,
+}) {
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -58,6 +65,7 @@ function ProductForm({ token, categories, productId, onSaved, onBack }) {
 
         setError("");
       } catch (error) {
+        onAuthError?.(error);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -65,7 +73,7 @@ function ProductForm({ token, categories, productId, onSaved, onBack }) {
     };
 
     loadProduct();
-  }, [productId]);
+  }, [onAuthError, productId]);
 
   const hasChanges =
     productId &&
@@ -142,6 +150,7 @@ function ProductForm({ token, categories, productId, onSaved, onBack }) {
         });
       }
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     } finally {
       setLoading(false);

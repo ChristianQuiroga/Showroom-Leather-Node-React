@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api";
+import { apiRequest } from "./apiClient.js";
 
 const buildProductQuery = ({
   search = "",
@@ -20,117 +20,65 @@ const buildProductQuery = ({
 
 export const getProducts = async (filters = {}) => {
   const query = buildProductQuery(filters);
+  const path = query ? `/products?${query}` : "/products";
 
-  const url = query ? `${API_URL}/products?${query}` : `${API_URL}/products`;
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error("No se pudieron obtener los productos");
-  }
-
-  return response.json();
+  return apiRequest(path, {
+    fallbackMessage: "No se pudieron obtener los productos",
+  });
 };
 
 export const getAdminProducts = async (filters = {}, token) => {
   const query = buildProductQuery(filters);
-  const url = query
-    ? `${API_URL}/products/admin?${query}`
-    : `${API_URL}/products/admin`;
+  const path = query ? `/products/admin?${query}` : "/products/admin";
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  return apiRequest(path, {
+    token,
+    fallbackMessage: "No se pudieron obtener los productos",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudieron obtener los productos");
-  }
-
-  return data;
 };
 
 export const getProductById = async (id) => {
-  const response = await fetch(`${API_URL}/products/${id}`);
-
-  if (!response.ok) {
-    throw new Error("No se pudo obtener el producto");
-  }
-
-  return response.json();
+  return apiRequest(`/products/${id}`, {
+    fallbackMessage: "No se pudo obtener el producto",
+  });
 };
 
 export const createProduct = async (product, token) => {
-  const response = await fetch(`${API_URL}/products`, {
+  return apiRequest("/products", {
+    token,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(product),
+    fallbackMessage: "No se pudo crear el producto",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo crear el producto");
-  }
-
-  return data;
 };
 
 export const updateProduct = async (id, product, token) => {
-  const response = await fetch(`${API_URL}/products/${id}`, {
+  return apiRequest(`/products/${id}`, {
+    token,
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(product),
+    fallbackMessage: "No se pudo actualizar el producto",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo actualizar el producto");
-  }
-
-  return data;
 };
 
 export const deactivateProduct = async (id, token) => {
-  const response = await fetch(`${API_URL}/products/${id}`, {
+  return apiRequest(`/products/${id}`, {
+    token,
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    fallbackMessage: "No se pudo desactivar el producto",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo desactivar el producto");
-  }
-
-  return data;
 };
 
 export const activateProduct = async (id, token) => {
-  const response = await fetch(`${API_URL}/products/${id}/activate`, {
+  return apiRequest(`/products/${id}/activate`, {
+    token,
     method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    fallbackMessage: "No se pudo activar el producto",
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo activar el producto");
-  }
-
-  return data;
 };

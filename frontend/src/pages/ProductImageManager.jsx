@@ -7,7 +7,13 @@ import {
   deleteProductImage,
 } from "../services/productImageService.js";
 
-function ProductImageManager({ productId, token, onSaved, onBack }) {
+function ProductImageManager({
+  productId,
+  token,
+  onSaved,
+  onBack,
+  onAuthError,
+}) {
   const [images, setImages] = useState([]);
   const [file, setFile] = useState(null);
   const [altText, setAltText] = useState("");
@@ -21,6 +27,7 @@ function ProductImageManager({ productId, token, onSaved, onBack }) {
       setImages(response.data);
       setError("");
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     }
   };
@@ -38,6 +45,7 @@ function ProductImageManager({ productId, token, onSaved, onBack }) {
         }
       } catch (error) {
         if (!ignore) {
+          onAuthError?.(error);
           setError(error.message);
         }
       }
@@ -48,7 +56,7 @@ function ProductImageManager({ productId, token, onSaved, onBack }) {
     return () => {
       ignore = true;
     };
-  }, [productId]);
+  }, [onAuthError, productId]);
 
   const handleUpload = async (event) => {
     event.preventDefault();
@@ -82,6 +90,7 @@ function ProductImageManager({ productId, token, onSaved, onBack }) {
         onSaved();
       }
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -103,6 +112,7 @@ function ProductImageManager({ productId, token, onSaved, onBack }) {
         onSaved();
       }
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     }
   };
@@ -122,6 +132,7 @@ function ProductImageManager({ productId, token, onSaved, onBack }) {
         onSaved();
       }
     } catch (error) {
+      onAuthError?.(error);
       setError(error.message);
     }
   };

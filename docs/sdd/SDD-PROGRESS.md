@@ -110,6 +110,47 @@ Este hallazgo queda fuera del alcance de SL-31 y debe registrarse para la fase d
 
 Status: Pending
 
+### SL-33 — Revisar estrategia de persistencia de sesión en frontend
+
+**Estado:** Done
+
+#### Requirement
+Mantener persistencia de sesión en frontend de forma consistente para el MVP v1, validando correctamente JWT inválidos, expirados o sin permisos de administrador.
+
+#### Implementación
+- Se mantiene `localStorage` para MVP v1.
+- Se agregó validación inicial mediante `GET /api/auth/me`.
+- Los controles administrativos permanecen ocultos hasta completar la validación.
+- Solo usuarios activos con `role === "admin"` habilitan administración.
+- Se centralizó `clearSession()`.
+- `401` y `403` eliminan la sesión administrativa.
+- `400`, `404`, `409`, `500` y errores de red no eliminan el token.
+- Se agregó cierre local basado en el claim `exp`.
+- Se centralizaron URL base, Bearer y manejo de respuestas mediante `ApiError`.
+- Se eliminó la entrada duplicada `JWT_SECRET` de `.env.example`.
+
+#### Verificación técnica
+- Backend: 2 suites y 27 tests aprobados ✅
+- Frontend `npm run lint` ✅
+- Frontend `npm run build` ✅
+- `git diff --check` ✅
+
+#### Pruebas manuales
+- Login admin + F5 conserva sesión ✅
+- Token alterado se elimina y vuelve a modo público ✅
+- Token expirado se elimina correctamente ✅
+- `401` cierra sesión y oculta administración ✅
+- `409` mantiene sesión y muestra error ✅
+- Logout manual + F5 no restaura sesión ✅
+
+#### Decisión
+Se mantiene `localStorage` en MVP v1.
+
+La estrategia avanzada con cookies `httpOnly`, refresh tokens y revocación de sesiones queda como deuda futura.
+
+#### Resultado
+SL-33 cumple los criterios definidos para persistencia y consistencia de sesión del MVP v1.
+
 ### SL-34 — Gestionar productos inactivos desde administración
 
 **Estado:** Done

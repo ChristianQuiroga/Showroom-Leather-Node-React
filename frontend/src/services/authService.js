@@ -1,7 +1,7 @@
-const API_URL = "http://localhost:3000/api";
+import { apiRequest } from "./apiClient.js";
 
 export const login = async ({ email, password }) => {
-  const response = await fetch(`${API_URL}/auth/login`, {
+  return apiRequest("/auth/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -10,13 +10,32 @@ export const login = async ({ email, password }) => {
       email,
       password,
     }),
+    fallbackMessage: "No se pudo iniciar sesión",
   });
+};
 
-  const data = await response.json();
+export const getCurrentUser = async (token) => {
+  return apiRequest("/auth/me", {
+    token,
+    fallbackMessage: "No se pudo validar la sesión",
+  });
+};
 
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo iniciar sesión");
+export const getTokenExpiration = (token) => {
+  try {
+    const payloadPart = token.split(".")[1];
+
+    if (!payloadPart) return null;
+
+    const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+    const paddedBase64 = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    const payload = JSON.parse(globalThis.atob(paddedBase64));
+
+    return Number.isFinite(payload.exp) ? payload.exp * 1000 : null;
+  } catch {
+    return null;
   }
-
-  return data;
 };
