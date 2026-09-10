@@ -19,6 +19,13 @@ import {
 
 import "./App.css";
 
+const createInitialProductManagerState = () => ({
+  search: "",
+  status: "",
+  categoryId: "",
+  page: 1,
+});
+
 function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,11 +47,19 @@ function App() {
   const [refreshProducts, setRefreshProducts] = useState(0);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showProductManager, setShowProductManager] = useState(false);
+  const [productManagerState, setProductManagerState] = useState(
+    createInitialProductManagerState,
+  );
   const [imageProductId, setImageProductId] = useState(null);
   const hasActiveFilters = Boolean(search || status || categoryId);
 
+  const resetProductManagerState = useCallback(() => {
+    setProductManagerState(createInitialProductManagerState());
+  }, []);
+
   const clearSession = useCallback(() => {
     localStorage.removeItem("token");
+    resetProductManagerState();
     setToken(null);
     setSessionLoading(false);
     setShowLogin(false);
@@ -53,7 +68,7 @@ function App() {
     setShowCategoryManager(false);
     setShowProductManager(false);
     setImageProductId(null);
-  }, []);
+  }, [resetProductManagerState]);
 
   const handleAdminError = useCallback(
     (requestError) => {
@@ -75,6 +90,7 @@ function App() {
     }
 
     localStorage.setItem("token", response.token);
+    resetProductManagerState();
     setToken(response.token);
 
     setShowLogin(false);
@@ -147,6 +163,8 @@ function App() {
 
   // Load products when filters or page change
   useEffect(() => {
+    let ignore = false;
+
     const loadProducts = async () => {
       try {
         const response = await getProducts({
@@ -156,17 +174,30 @@ function App() {
           page,
         });
 
+        if (ignore) return;
+
+        const lastValidPage = Math.max(response.pagination.totalPages, 1);
+
+        if (page > lastValidPage) {
+          setPage(lastValidPage);
+          return;
+        }
+
         setProducts(response.data);
         setPagination(response.pagination);
         setError("");
       } catch (error) {
-        setError(error.message);
+        if (!ignore) setError(error.message);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     };
 
     loadProducts();
+
+    return () => {
+      ignore = true;
+    };
   }, [search, status, categoryId, page, refreshProducts]);
 
   // Load categories on component mount
@@ -265,12 +296,18 @@ function App() {
         token={token}
         onAuthError={handleAdminError}
         categories={categories}
+        managerState={productManagerState}
+        onManagerStateChange={setProductManagerState}
         onEdit={(productId) => {
           setEditingProductId(productId);
           setShowProductForm(true);
         }}
         onManageImages={(productId) => setImageProductId(productId)}
-        onBack={() => setShowProductManager(false)}
+        onBack={() => {
+          setShowProductManager(false);
+          resetProductManagerState();
+          setRefreshProducts((current) => current + 1);
+        }}
       />
     );
   }

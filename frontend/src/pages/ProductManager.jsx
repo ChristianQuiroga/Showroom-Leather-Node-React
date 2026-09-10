@@ -14,18 +14,17 @@ function ProductManager({
   onEdit,
   onManageImages,
   onAuthError,
+  managerState,
+  onManagerStateChange,
 }) {
   const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionProductId, setActionProductId] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [refreshProducts, setRefreshProducts] = useState(0);
+  const { search, status, categoryId, page } = managerState;
 
   const hasActiveFilters = Boolean(search || status || categoryId);
 
@@ -46,7 +45,10 @@ function ProductManager({
         const lastValidPage = Math.max(totalPages, 1);
 
         if (page > lastValidPage) {
-          setPage(lastValidPage);
+          onManagerStateChange((current) => ({
+            ...current,
+            page: lastValidPage,
+          }));
           return;
         }
 
@@ -70,9 +72,20 @@ function ProductManager({
     return () => {
       ignore = true;
     };
-  }, [categoryId, onAuthError, page, refreshProducts, search, status, token]);
+  }, [
+    categoryId,
+    onAuthError,
+    onManagerStateChange,
+    page,
+    refreshProducts,
+    search,
+    status,
+    token,
+  ]);
 
   const handleStateChange = async (product, shouldActivate) => {
+    if (actionProductId !== null) return;
+
     try {
       setActionProductId(product.id);
       setMessage("");
@@ -93,16 +106,22 @@ function ProductManager({
   };
 
   const handleClearFilters = () => {
-    setSearch("");
-    setStatus("");
-    setCategoryId("");
-    setPage(1);
+    onManagerStateChange({
+      search: "",
+      status: "",
+      categoryId: "",
+      page: 1,
+    });
   };
 
   return (
     <main className="product-manager-page">
       <section className="product-manager-card">
-        <button type="button" onClick={onBack}>
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={actionProductId !== null}
+        >
           Volver
         </button>
 
@@ -114,16 +133,22 @@ function ProductManager({
             placeholder="Buscar producto..."
             value={search}
             onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
+              onManagerStateChange((current) => ({
+                ...current,
+                search: event.target.value,
+                page: 1,
+              }));
             }}
           />
 
           <select
             value={status}
             onChange={(event) => {
-              setStatus(event.target.value);
-              setPage(1);
+              onManagerStateChange((current) => ({
+                ...current,
+                status: event.target.value,
+                page: 1,
+              }));
             }}
           >
             <option value="">Todos los estados</option>
@@ -136,8 +161,11 @@ function ProductManager({
           <select
             value={categoryId}
             onChange={(event) => {
-              setCategoryId(event.target.value);
-              setPage(1);
+              onManagerStateChange((current) => ({
+                ...current,
+                categoryId: event.target.value,
+                page: 1,
+              }));
             }}
           >
             <option value="">Todas las categorías</option>
@@ -209,7 +237,12 @@ function ProductManager({
           <div className="pagination">
             <button
               type="button"
-              onClick={() => setPage((current) => current - 1)}
+              onClick={() =>
+                onManagerStateChange((current) => ({
+                  ...current,
+                  page: current.page - 1,
+                }))
+              }
               disabled={pagination.page === 1}
             >
               Anterior
@@ -221,7 +254,12 @@ function ProductManager({
 
             <button
               type="button"
-              onClick={() => setPage((current) => current + 1)}
+              onClick={() =>
+                onManagerStateChange((current) => ({
+                  ...current,
+                  page: current.page + 1,
+                }))
+              }
               disabled={pagination.page === pagination.totalPages}
             >
               Siguiente

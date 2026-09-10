@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export class ApiError extends Error {
   constructor(message, status) {
@@ -10,7 +10,11 @@ export class ApiError extends Error {
 
 export const apiRequest = async (
   path,
-  { token, fallbackMessage = "No se pudo completar la solicitud", ...options } = {},
+  {
+    token,
+    fallbackMessage = "No se pudo completar la solicitud",
+    ...options
+  } = {},
 ) => {
   const headers = new Headers(options.headers);
 

@@ -4,6 +4,7 @@ import cors from "cors"; // Importa el paquete cors para habilitar CORS en la ap
 import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import env from "./config/env.js";
 import { notFoundHandler } from "./middlewares/notFound.middleware.js";
 import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 
@@ -18,7 +19,11 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(
+  cors({
+    origin: env.corsOrigins,
+  }),
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
