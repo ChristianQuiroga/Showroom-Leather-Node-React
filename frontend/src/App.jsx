@@ -43,7 +43,7 @@ function App() {
     Boolean(localStorage.getItem("token")),
   );
   const [showProductForm, setShowProductForm] = useState(false);
-  const [editingProductId, setEditingProductId] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [refreshProducts, setRefreshProducts] = useState(0);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showProductManager, setShowProductManager] = useState(false);
@@ -64,7 +64,7 @@ function App() {
     setSessionLoading(false);
     setShowLogin(false);
     setShowProductForm(false);
-    setEditingProductId(null);
+    setEditingProduct(null);
     setShowCategoryManager(false);
     setShowProductManager(false);
     setImageProductId(null);
@@ -258,11 +258,11 @@ function App() {
         token={token}
         onAuthError={handleAdminError}
         categories={categories}
-        productId={editingProductId}
+        product={editingProduct}
         onSaved={() => setRefreshProducts((prev) => prev + 1)}
         onBack={() => {
           setShowProductForm(false);
-          setEditingProductId(null);
+          setEditingProduct(null);
         }}
       />
     );
@@ -298,8 +298,8 @@ function App() {
         categories={categories}
         managerState={productManagerState}
         onManagerStateChange={setProductManagerState}
-        onEdit={(productId) => {
-          setEditingProductId(productId);
+        onEdit={(product) => {
+          setEditingProduct(product);
           setShowProductForm(true);
         }}
         onManageImages={(productId) => setImageProductId(productId)}
@@ -321,7 +321,7 @@ function App() {
         <>
           <button
             onClick={() => {
-              setEditingProductId(null);
+              setEditingProduct(null);
               setShowProductForm(true);
             }}
           >
@@ -404,7 +404,7 @@ function App() {
                   onEdit={
                     token
                       ? () => {
-                          setEditingProductId(product.id);
+                          setEditingProduct(product);
                           setShowProductForm(true);
                         }
                       : null

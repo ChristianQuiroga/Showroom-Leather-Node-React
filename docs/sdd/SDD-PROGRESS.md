@@ -356,6 +356,99 @@ Esto evita publicar nuevamente un producto sin revisión administrativa previa.
 
 ---
 
+### SL-36 — Restringir acceso público a productos no visibles
+
+**Estado:** Done
+
+**Change:** `restrict-public-inactive-product-access`
+
+**Jira:** `SL-36`
+
+#### Requirement
+
+El detalle público y las imágenes de un producto solo deben ser accesibles cuando el producto está activo y publicado. Los productos inexistentes, inactivos y no publicados deben resultar indistinguibles para clientes públicos.
+
+#### Current State
+
+- El listado público ya filtraba por `is_active = true` e `is_published = true`.
+- `GET /api/products/:id` consultaba por ID sin aplicar esas condiciones.
+- `GET /api/products/:productId/images` validaba la existencia del producto sin comprobar su visibilidad pública.
+
+#### Gap
+
+Conocer un ID permitía obtener el detalle o los metadatos de imágenes de productos retirados del catálogo público.
+
+#### Implementación
+
+- Se agregó una consulta de repositorio específica para productos públicos por ID.
+- La consulta exige simultáneamente `is_active = true` e `is_published = true`.
+- El detalle público y la lectura pública de imágenes reutilizan esa consulta.
+- Los productos inexistentes, inactivos y no publicados responden `404` con `Producto no encontrado`.
+- `findById` conserva su comportamiento para los flujos administrativos.
+- No se modificaron el esquema de base de datos, las dependencias ni la integración con Cloudinary.
+
+#### Verificación automática
+
+- Suite de productos: 31 tests aprobados.
+- Suite completa del backend: 2 suites y 39 tests aprobados.
+- Se cubrieron productos activos/publicados, inactivos, no publicados e inexistentes, IDs inválidos, acceso sin JWT y colección de imágenes vacía.
+- Se verificó que las consultas no públicas usan el mismo contrato `404` y no devuelven metadatos de imágenes.
+
+#### QA HTTP
+
+- Detalle activo/publicado sin JWT: `200` ✅
+- Imágenes de producto activo/publicado sin JWT: `200` ✅
+- Detalle e imágenes de producto inactivo: `404` ✅
+- Detalle e imágenes de producto no publicado: `404` ✅
+- Detalle e imágenes de producto inexistente: `404` ✅
+- IDs inválidos: `400` ✅
+- Los fixtures temporales fueron eliminados al finalizar ✅
+
+#### Resultado
+
+El backend aplica de forma consistente la regla de visibilidad del catálogo a los endpoints públicos por ID, sin ampliar el alcance del MVP.
+
+#### Regresión administrativa detectada durante QA
+
+Al despublicar un producto y volver a editarlo desde Gestionar productos, el formulario quedaba vacío con `Producto no encontrado`.
+
+Causa raíz:
+
+- `ProductForm` reutilizaba `GET /api/products/:id` para cargar una edición administrativa.
+- Ese endpoint pasó correctamente a usar `findPublicById` y, por contrato, oculta productos no publicados.
+- El frontend mezclaba así una lectura pública con un flujo administrativo.
+
+Corrección:
+
+- Se reutiliza el objeto completo obtenido por `GET /api/products/admin`, endpoint existente de SL-34 protegido con JWT y rol admin.
+- `ProductManager` pasa el producto seleccionado a `App` y `ProductForm` inicializa el formulario con esos datos.
+- No se agregó un endpoint administrativo nuevo.
+- `GET /api/products/:id` y `GET /api/products/:productId/images` conservan la protección pública mediante `findPublicById`.
+- `findById` permanece disponible para validaciones y mutaciones administrativas.
+
+Verificación de la corrección:
+
+- Regresión backend: el listado administrativo devuelve productos activos no publicados a un admin autenticado ✅
+- Autorización del listado administrativo: `401` sin JWT y `403` sin rol admin ✅
+- Suite de productos: 31 tests aprobados ✅
+- Suite completa del backend: 2 suites y 39 tests aprobados ✅
+- Frontend `npm run lint` ✅
+- Frontend `npm run build` ✅
+
+QA manual recomendado:
+
+- Despublicar un producto activo, volver a Gestionar productos y abrirlo nuevamente en Editar.
+- Confirmar que el formulario conserva todos sus datos y muestra Publicado desmarcado.
+- Guardar otra modificación y confirmar que el producto continúa no publicado.
+- Confirmar desde una sesión pública que su detalle y sus imágenes responden `404`.
+- Confirmar que un producto activo/publicado sigue abriendo su detalle e imágenes públicamente.
+
+#### Resultado final
+
+La protección pública y la edición administrativa quedan separadas: los productos no visibles continúan ocultos al público y los productos activos no publicados siguen siendo editables por administradores.
+
+---
+
 ## Validación manual — navegación, paginación y sesión
 
 ### Catálogo público

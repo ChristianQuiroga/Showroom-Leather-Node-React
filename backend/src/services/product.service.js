@@ -177,7 +177,7 @@ export const getAdminProducts = async (params = {}) => {
 };
 
 export const getProductById = async (id) => {
-  const product = await productRepository.findById(id);
+  const product = await productRepository.findPublicById(id);
 
   if (!product) {
     throw new AppError("Producto no encontrado", 404);

@@ -1,79 +1,42 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   createProduct,
-  getProductById,
   updateProduct,
 } from "../services/productService.js";
+
+const createFormState = (product) => ({
+  name: product?.name || "",
+  description: product?.description || "",
+  categoryId: product?.category_id || "",
+  material: product?.material || "",
+  color: product?.color || "",
+  size: product?.size || "",
+  price: product?.price || "",
+  stock: product?.stock ?? "",
+  status: product?.status || "available",
+  isFeatured: product?.is_featured || false,
+  isPublished: product?.is_published ?? true,
+});
 
 function ProductForm({
   token,
   categories,
-  productId,
+  product,
   onSaved,
   onBack,
   onAuthError,
 }) {
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    categoryId: "",
-    material: "",
-    color: "",
-    size: "",
-    price: "",
-    stock: "",
-    status: "available",
-    isFeatured: false,
-    isPublished: true,
-  });
+  const productId = product?.id;
+  const [form, setForm] = useState(() => createFormState(product));
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [originalForm, setOriginalForm] = useState(null);
-
-  useEffect(() => {
-    if (!productId) {
-      return;
-    }
-
-    const loadProduct = async () => {
-      try {
-        setLoading(true);
-
-        const response = await getProductById(productId);
-        const product = response.data;
-
-        const loadedForm = {
-          name: product.name || "",
-          description: product.description || "",
-          categoryId: product.category_id || "",
-          material: product.material || "",
-          color: product.color || "",
-          size: product.size || "",
-          price: product.price || "",
-          stock: product.stock ?? "",
-          status: product.status || "available",
-          isFeatured: product.is_featured || false,
-          isPublished: product.is_published ?? true,
-        };
-
-        setForm(loadedForm);
-        setOriginalForm(loadedForm);
-
-        setError("");
-      } catch (error) {
-        onAuthError?.(error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProduct();
-  }, [onAuthError, productId]);
+  const [originalForm, setOriginalForm] = useState(() =>
+    product ? createFormState(product) : null,
+  );
 
   const hasChanges =
     productId &&

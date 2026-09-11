@@ -211,7 +211,7 @@ function ProductManager({
                   product={product}
                   showAdminState
                   actionLoading={actionLoading}
-                  onEdit={product.is_active ? () => onEdit(product.id) : null}
+                  onEdit={product.is_active ? () => onEdit(product) : null}
                   onManageImages={
                     product.is_active
                       ? () => onManageImages(product.id)

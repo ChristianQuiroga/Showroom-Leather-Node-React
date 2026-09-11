@@ -129,6 +129,25 @@ export const findById = async (id) => {
   return result.rows[0] ?? null;
 };
 
+export const findPublicById = async (id) => {
+  const query = `
+    SELECT ${productFields}
+    FROM products p
+    INNER JOIN categories c
+      ON c.id = p.category_id
+    LEFT JOIN product_images pi
+      ON pi.product_id = p.id
+      AND pi.is_main = true
+    WHERE p.id = $1
+      AND p.is_active = true
+      AND p.is_published = true
+  `;
+
+  const result = await pool.query(query, [id]);
+
+  return result.rows[0] ?? null;
+};
+
 export const findByCode = async (code) => {
   const query = `
     SELECT

@@ -55,7 +55,7 @@ const validateProductForImageChanges = async (productId) => {
 };
 
 export const getProductImages = async (productId) => {
-  const product = await productRepository.findById(productId);
+  const product = await productRepository.findPublicById(productId);
 
   if (!product) {
     throw new AppError("Producto no encontrado", 404);
