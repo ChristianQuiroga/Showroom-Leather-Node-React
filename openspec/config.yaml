@@ -1,0 +1,111 @@
+schema: spec-driven
+
+context: |
+  Project: Showroom-Leather-Node-React
+  Language: Spanish.
+  All artifacts MUST be written in Spanish.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Product:
+  - MVP v1 of a leather showroom/catalog.
+  - This is not an e-commerce platform.
+  - Public users browse products, filter, view details/images, and contact through WhatsApp.
+  - Admin users manage products, categories, images, publication state, and activation state.
+
+  Tech stack:
+  - Backend: Node.js, Express, JavaScript (ESM), PostgreSQL.
+  - Frontend: React, JavaScript, Vite.
+  - Authentication: JWT with admin authorization.
+  - Images: Cloudinary.
+  - Backend testing: Jest + Supertest.
+  - Version control: Git/GitHub.
+  - Project management: Jira.
+
+  Existing project documentation:
+  - docs/sdd/MVP-V1-FINAL-SPEC.md is the main MVP specification.
+  - docs/sdd/SDD-PROGRESS.md is the global implementation and QA journal.
+  - docs/sdd/01_Project_Overview.md contains product context.
+  - docs/sdd/02_Product_Roadmap.md contains the MVP roadmap.
+  - docs/sdd/03_Domain_Model.md contains domain concepts and rules.
+  - docs/sdd/04_Architecture.md contains architecture decisions.
+  - docs/sdd/05_Database_Schema.md contains persistence expectations.
+  - docs/sdd/07_API.md contains API expectations.
+  - docs/sdd/08_Use_Cases.md contains main use cases.
+
+  Development workflow:
+  Requirement -> Current State -> Gap Analysis -> Implementation Plan ->
+  Implement -> Verify -> Regression -> Update Spec/Jira -> Commit.
+
+  OpenSpec role:
+  - OpenSpec documents and manages each concrete change.
+  - docs/sdd/SDD-PROGRESS.md remains the global history of the MVP.
+  - Do not duplicate the full SDD documentation inside each OpenSpec change.
+  - Reference existing project documentation when it already defines behavior.
+
+  MVP principles:
+  - Prefer the smallest change that satisfies the requirement.
+  - Reuse existing services, components, routes, repositories, and patterns.
+  - Do not refactor only for aesthetics.
+  - Do not introduce new libraries, frameworks, or architecture unless required.
+  - Preserve existing behavior outside the scope of the change.
+  - Do not expand MVP scope unless required for a bug, security issue,
+    acceptance criterion, regression, or incomplete committed flow.
+  - Backend is the source of truth for business rules and authorization.
+  - Never expose secrets or commit real .env files.
+
+rules:
+  proposal:
+    - Clearly state the problem, expected outcome, scope, and why the change is needed.
+    - Include explicit Non-goals to prevent scope creep.
+    - Identify the related Jira work item when one exists.
+    - Reuse existing project decisions unless the proposal explicitly changes one.
+    - Do not propose unrelated refactors or new features.
+
+  specs:
+    - Express externally observable behavior and business rules, not implementation details.
+    - Define acceptance criteria that can be objectively verified.
+    - Preserve existing behavior unless the change explicitly modifies it.
+    - Use SHALL/MUST for normative requirements.
+    - Cover relevant success, validation, authorization, error, and edge-case behavior.
+
+  design:
+    - Start from the current architecture and reuse existing patterns.
+    - Identify affected frontend, backend, database, and external-service boundaries.
+    - Explain important trade-offs and decisions.
+    - Prefer minimal modifications over broad refactors.
+    - State explicitly when backend, database migrations, or new dependencies are not required.
+    - Record security, data consistency, pagination, state synchronization, and regression risks when relevant.
+
+  tasks:
+    - Group tasks under numbered sections.
+    - "Every task MUST use OpenSpec checkbox format: - [ ] X.Y Description."
+    - Order tasks by dependency.
+    - Keep each task small enough to complete and verify in one work session.
+    - Include implementation, automated verification, manual QA, documentation, and regression tasks when applicable.
+    - Include updating docs/sdd/SDD-PROGRESS.md and Jira before final commit.
+    - Do not include unrelated cleanup or refactors.
+    - Do not create a commit task until implementation and verification are complete.
+
+operations:
+  apply:
+    guidance:
+      - Work only on tasks defined for the current OpenSpec change.
+      - Inspect the current implementation before modifying code.
+      - Reuse existing code and project patterns before creating new abstractions.
+      - Preserve unrelated local changes.
+      - Pause and report if implementation requires scope beyond the approved artifacts.
+      - Do not modify backend when the existing backend contract already satisfies the requirement.
+      - Do not modify database schema unless the approved change requires it.
+      - Run relevant backend tests after backend changes.
+      - Run npm run lint and npm run build after frontend changes.
+      - Run git diff --check before declaring implementation complete.
+      - Do not make a Git commit automatically.
+      - Report modified files, verification results, risks, and recommended manual tests.
+
+  archive:
+    guidance:
+      - Archive only after implementation, verification, regression, and manual QA are complete.
+      - Confirm docs/sdd/SDD-PROGRESS.md reflects the final result.
+      - Confirm the related Jira work item reflects the final state.
+      - Summarize what shipped, important decisions, and remaining technical debt.
+      - Keep future improvements outside the archived MVP change unless they were part of its approved scope.
