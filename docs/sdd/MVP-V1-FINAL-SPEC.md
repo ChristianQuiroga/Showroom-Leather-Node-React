@@ -149,8 +149,10 @@ El usuario no autenticado debe poder navegar el catálogo sin ver funciones admi
 
 ### Filtros
 - `search`
-- `status`
+- `status`: estado comercial `available`, `reserved` o `sold`
 - `categoryId`
+
+La publicación no es un estado comercial: `is_published` es la única fuente de verdad para la visibilidad pública.
 
 ### Acceptance Criteria
 - Son combinables.

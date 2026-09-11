@@ -155,7 +155,6 @@ function ProductManager({
             <option value="available">Disponible</option>
             <option value="reserved">Reservado</option>
             <option value="sold">Vendido</option>
-            <option value="unpublished">No publicado</option>
           </select>
 
           <select

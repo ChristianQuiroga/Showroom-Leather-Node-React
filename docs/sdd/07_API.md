@@ -14,7 +14,7 @@ Debe:
 
 ### Query params
 - search
-- status
+- status: `available`, `reserved` o `sold`
 - categoryId
 - page
 - limit
@@ -69,6 +69,8 @@ Debe validar:
 - material obligatorio
 - categoría activa/existente
 - reglas stock/status
+- `status` solo admite `available`, `reserved` o `sold`
+- `isPublished` controla la publicación independientemente del estado comercial
 
 ### Activación/desactivación
 La implementación debe permitir:

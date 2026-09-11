@@ -82,13 +82,16 @@ Campos esperados:
 ## 4. Estados
 
 ### Producto
-Debe soportar como mínimo:
+`status` representa únicamente el estado comercial y admite:
 - available
+- reserved
 - sold
 
-Además:
+Estas dimensiones son independientes del estado comercial:
 - activo/inactivo mediante `isActive`
 - publicado/no publicado mediante `isPublished`
+
+`isPublished` es la única fuente de verdad para decidir la publicación pública. `unpublished` no es un estado comercial válido.
 
 ### Categoría
 - Activa

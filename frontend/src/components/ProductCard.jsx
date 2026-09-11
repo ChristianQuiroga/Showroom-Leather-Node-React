@@ -11,7 +11,6 @@ const formatStatus = (status) => {
     available: "Disponible",
     reserved: "Reservado",
     sold: "Vendido",
-    unpublished: "No publicado",
   };
 
   return statuses[status] || status;

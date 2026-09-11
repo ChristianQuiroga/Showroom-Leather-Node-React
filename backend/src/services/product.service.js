@@ -8,7 +8,7 @@ import { generateProductCode } from "../utils/productCode.js";
 
 import { buildWhatsAppUrl } from "../utils/whatsapp.js";
 
-const validStatuses = ["available", "reserved", "sold", "unpublished"];
+const validStatuses = ["available", "reserved", "sold"];
 const normalizeAndValidateProductData = async ({
   name,
   description,
@@ -122,12 +122,9 @@ export const getAllProducts = async ({
     }
   }
 
-  // Validar el estado si se proporciona
-  const validStatuses = ["available", "reserved", "sold", "unpublished"];
-
   if (status && !validStatuses.includes(status)) {
     throw new AppError(
-      "Status inválido. Valores permitidos: available, reserved, sold, unpublished",
+      "Status inválido. Valores permitidos: available, reserved, sold",
       400,
     );
   }

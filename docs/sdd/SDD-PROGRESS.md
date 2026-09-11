@@ -486,3 +486,61 @@ La protección pública y la edición administrativa quedan separadas: los produ
 - Las vistas actuales no persisten mediante URL/routing.
 - F5 desde una vista administrativa vuelve al catálogo público.
 - React Router y persistencia de navegación mediante URL quedan como deuda futura.
+
+---
+
+### SL-37 — Separar estado comercial de publicación
+
+**Estado:** Done
+
+**Change:** `separate-product-commercial-status-from-publication`
+
+**Jira:** `SL-37`
+
+#### Causa
+
+El producto permitía representar “no publicado” mediante `status = unpublished` y mediante `is_published = false`. PostgreSQL, el servicio de productos y distintos selectores del frontend aceptaban ambas representaciones, lo que permitía combinaciones conceptualmente contradictorias.
+
+#### Implementación
+
+- `status` acepta exclusivamente `available`, `reserved` y `sold` en PostgreSQL y en las validaciones de altas, ediciones y filtros.
+- `is_published` permanece como única fuente de verdad para la visibilidad pública.
+- Se retiró “No publicado” de los controles y traducciones de estado comercial del frontend; el checkbox y el indicador de publicación permanecen separados.
+- No se cambiaron rutas, autorización, repositorios ni la semántica pública establecida por SL-36.
+- No se agregaron dependencias.
+
+#### Migración
+
+- Audit previo de la base configurada: 0 productos reales con `status = unpublished`.
+- La migración normaliza filas heredadas a `sold` cuando `stock = 0` o `available` cuando `stock > 0`, y fija `is_published = false`.
+- El `CHECK products_status_check` se reemplazó por `available`, `reserved` y `sold`.
+- Se verificó el ciclo `up/down/up` con fixtures controlados, preservación de filas válidas y rechazo PostgreSQL `23514` para `unpublished`.
+- Los fixtures temporales de migración y QA fueron eliminados.
+- El rollback restaura el dominio anterior, pero no reconstruye los valores ambiguos normalizados.
+
+#### Verificación automática
+
+- Suite enfocada de productos: 45 tests aprobados.
+- Suite completa backend: 2 suites y 53 tests aprobados.
+- Frontend `npm run lint`: aprobado.
+- Frontend `npm run build`: aprobado.
+- Se cubrieron los tres estados permitidos, rechazo de `unpublished`, filtros público/administrativo, independencia de publicación y regresión de visibilidad/autorización de SL-36.
+
+#### QA HTTP
+
+- Las seis combinaciones entre `available`/`reserved`/`sold` e `is_published` verdadero/falso conservaron ambos valores independientemente.
+- Detalle e imágenes respondieron `200` para productos activos/publicados y `404` para activos/no publicados en los tres estados comerciales.
+- Los filtros público y administrativo aceptaron los tres estados; el listado público conservó la condición de publicación.
+- El listado administrativo continuó incluyendo productos no publicados con JWT admin.
+
+#### QA manual aprobado
+
+- El usuario confirmó la aprobación del QA manual el 2026-09-11.
+- Solo se muestran Disponible, Reservado y Vendido como estados comerciales.
+- Publicado permanece separado del estado comercial.
+- Todas las combinaciones de `status` e `is_published` guardan correctamente y conservan sus valores al volver a editar.
+- No se detectaron regresiones de SL-36.
+
+#### Resultado final
+
+SL-37 finalizado en Jira según confirmación del usuario. Implementación y QA completos; las 24/24 tareas de OpenSpec quedan completadas. El cambio permanece sin archivar y no se realiza commit en este cierre.

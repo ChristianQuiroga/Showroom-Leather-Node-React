@@ -67,6 +67,8 @@ Campos esperados:
 ### products
 - price > 0
 - stock >= 0
+- `status IN ('available', 'reserved', 'sold')`
+- `is_published` es booleano y constituye la fuente de verdad de publicación
 - FK category_id → categories.id
 
 ### categories

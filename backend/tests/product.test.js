@@ -9,6 +9,8 @@ let adminToken;
 let nonAdminToken;
 let createdProductId;
 let createdProductName;
+let activeCategoryId;
+const commercialStatusProductIds = [];
 const visibilityFixtureIds = [];
 let publicProductId;
 let inactiveProductId;
@@ -39,6 +41,8 @@ beforeAll(async () => {
   if (!categoryResult.rows[0]) {
     throw new Error("Se requiere una categoría activa para probar productos");
   }
+
+  activeCategoryId = categoryResult.rows[0].id;
 
   const fixtureSuffix = `${Date.now()}-${process.pid}`;
   const productsResult = await pool.query(
@@ -158,6 +162,39 @@ describe("Product endpoints", () => {
       expect(response.statusCode).toBe(400);
     });
 
+    test.each(["available", "reserved", "sold"])(
+      "Debe aceptar el filtro comercial público %s",
+      async (status) => {
+        const response = await request(app).get(
+          `/api/products?status=${status}`,
+        );
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body).toHaveProperty("pagination");
+        expect(
+          response.body.data.every(
+            (product) =>
+              product.status === status &&
+              product.is_active === true &&
+              product.is_published === true,
+          ),
+        ).toBe(true);
+      },
+    );
+
+    test("Debe rechazar unpublished como filtro público", async () => {
+      const response = await request(app).get(
+        "/api/products?status=unpublished",
+      );
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty(
+        "message",
+        "Status inválido. Valores permitidos: available, reserved, sold",
+      );
+    });
+
     test("Debe devolver 400 si page es inválido", async () => {
       const response = await request(app).get("/api/products?page=0");
 
@@ -208,7 +245,7 @@ describe("Product endpoints", () => {
         .send({
           name: uniqueName,
           description: "Producto creado automáticamente por Jest",
-          categoryId: 1,
+          categoryId: activeCategoryId,
           material: "Cuero",
           color: "Negro",
           size: "M",
@@ -227,6 +264,131 @@ describe("Product endpoints", () => {
 
       createdProductId = response.body.data.id;
       createdProductName = uniqueName;
+    });
+
+    test.each([
+      ["available", 1, true],
+      ["reserved", 1, false],
+      ["sold", 0, true],
+    ])(
+      "Debe crear un producto con estado comercial %s y publicación independiente",
+      async (status, stock, isPublished) => {
+        const uniqueName = `Estado ${status} ${Date.now()}-${Math.random()}`;
+        const response = await request(app)
+          .post("/api/products")
+          .set("Authorization", `Bearer ${adminToken}`)
+          .send({
+            name: uniqueName,
+            description: "Cobertura de estados comerciales",
+            categoryId: activeCategoryId,
+            material: "Cuero",
+            color: "Negro",
+            size: "M",
+            price: 100000,
+            stock,
+            status,
+            isFeatured: false,
+            isPublished,
+          });
+
+        expect(response.statusCode).toBe(201);
+        expect(response.body.data).toMatchObject({
+          status,
+          is_published: isPublished,
+        });
+        commercialStatusProductIds.push(response.body.data.id);
+      },
+    );
+
+    test("Debe rechazar unpublished sin persistir el producto", async () => {
+      const uniqueName = `Estado eliminado ${Date.now()}`;
+      const response = await request(app)
+        .post("/api/products")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: uniqueName,
+          description: "No debe persistirse",
+          categoryId: activeCategoryId,
+          material: "Cuero",
+          color: "Negro",
+          size: "M",
+          price: 100000,
+          stock: 1,
+          status: "unpublished",
+          isFeatured: false,
+          isPublished: false,
+        });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty(
+        "message",
+        "El estado del producto no es válido",
+      );
+
+      const persisted = await pool.query(
+        "SELECT id FROM products WHERE name = $1",
+        [uniqueName],
+      );
+      expect(persisted.rowCount).toBe(0);
+    });
+  });
+
+  describe("PUT /api/products/:id", () => {
+    test("Debe actualizar estado comercial y publicación por separado", async () => {
+      const productId = commercialStatusProductIds[0];
+      const response = await request(app)
+        .put(`/api/products/${productId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: `Producto actualizado ${Date.now()}`,
+          description: "Actualización de estado comercial",
+          categoryId: activeCategoryId,
+          material: "Cuero",
+          color: "Marrón",
+          size: "L",
+          price: 120000,
+          stock: 1,
+          status: "reserved",
+          isFeatured: false,
+          isPublished: false,
+        });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.data).toMatchObject({
+        status: "reserved",
+        is_published: false,
+      });
+    });
+
+    test("Debe rechazar unpublished y conservar el estado persistido", async () => {
+      const productId = commercialStatusProductIds[0];
+      const response = await request(app)
+        .put(`/api/products/${productId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: `Producto inválido ${Date.now()}`,
+          description: "Actualización inválida",
+          categoryId: activeCategoryId,
+          material: "Cuero",
+          color: "Marrón",
+          size: "L",
+          price: 120000,
+          stock: 1,
+          status: "unpublished",
+          isFeatured: false,
+          isPublished: true,
+        });
+
+      expect(response.statusCode).toBe(400);
+
+      const persisted = await pool.query(
+        "SELECT status, is_published FROM products WHERE id = $1",
+        [productId],
+      );
+      expect(persisted.rows[0]).toEqual({
+        status: "reserved",
+        is_published: false,
+      });
     });
   });
 
@@ -377,6 +539,34 @@ describe("Product endpoints", () => {
         is_published: false,
       });
     });
+
+    test.each(["available", "reserved", "sold"])(
+      "Debe aceptar el filtro comercial administrativo %s",
+      async (status) => {
+        const response = await request(app)
+          .get(`/api/products/admin?status=${status}`)
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body).toHaveProperty("pagination");
+        expect(
+          response.body.data.every((product) => product.status === status),
+        ).toBe(true);
+      },
+    );
+
+    test("Debe rechazar unpublished como filtro administrativo", async () => {
+      const response = await request(app)
+        .get("/api/products/admin?status=unpublished")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty(
+        "message",
+        "Status inválido. Valores permitidos: available, reserved, sold",
+      );
+    });
   });
 
   describe("Transiciones de actividad del producto", () => {
@@ -475,6 +665,12 @@ afterAll(async () => {
   if (visibilityFixtureIds.length > 0) {
     await pool.query("DELETE FROM products WHERE id = ANY($1::int[])", [
       visibilityFixtureIds,
+    ]);
+  }
+
+  if (commercialStatusProductIds.length > 0) {
+    await pool.query("DELETE FROM products WHERE id = ANY($1::int[])", [
+      commercialStatusProductIds,
     ]);
   }
 
