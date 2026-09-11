@@ -15,6 +15,8 @@
 - responsive;
 - cards completas.
 
+Con sesión admin activa, las tarjetas tampoco ofrecen Editar ni Gestionar imágenes. Se mantienen los accesos globales Nuevo producto, Gestionar productos, Gestionar categorías y Cerrar sesión.
+
 ---
 
 ## UC-02 — Buscar y filtrar
@@ -94,6 +96,8 @@
 
 **Actor:** Administrador
 
+**Acceso:** Editar desde Gestionar productos para un producto activo, publicado o no publicado.
+
 ### Acceptance
 - precarga de datos;
 - Guardar deshabilitado sin cambios;
@@ -107,6 +111,8 @@
 ## UC-08 — Desactivar/reactivar producto
 
 **Actor:** Administrador
+
+**Acceso:** Gestionar productos; los activos ofrecen Desactivar y los inactivos únicamente Activar como acción por producto.
 
 ### Flujo
 1. Lista productos activos/inactivos.
@@ -141,6 +147,8 @@ Puede:
 ## UC-10 — Gestionar imágenes
 
 **Actor:** Administrador
+
+**Acceso:** Gestionar imágenes desde Gestionar productos para un producto activo; este acceso no aparece en las tarjetas del catálogo.
 
 Puede:
 - subir;

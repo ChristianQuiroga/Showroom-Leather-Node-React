@@ -544,3 +544,54 @@ El producto permitía representar “no publicado” mediante `status = unpublis
 #### Resultado final
 
 SL-37 finalizado en Jira según confirmación del usuario. Implementación y QA completos; las 24/24 tareas de OpenSpec quedan completadas. El cambio permanece sin archivar y no se realiza commit en este cierre.
+
+---
+
+### SL-38 — Centralizar acciones administrativas de producto
+
+**Estado:** Done
+
+**Change:** `centralize-admin-product-actions`
+
+**Jira:** `SL-38` — actualizado manualmente y en Listo/Finalizado, según confirmación del usuario.
+
+#### Implementación
+
+- Se retiraron únicamente `onEdit` y `onManageImages` de las tarjetas del catálogo en `frontend/src/App.jsx` (11 líneas eliminadas).
+- Las tarjetas del showroom no muestran Editar ni Gestionar imágenes, aun con sesión admin; conservan los datos y la selección para abrir detalle.
+- Se conservaron Nuevo producto, Gestionar productos, Gestionar categorías y Cerrar sesión.
+- ProductManager conserva Editar, Gestionar imágenes y Desactivar para activos, y únicamente Activar para inactivos.
+- No se modificaron ProductCard, ProductManager, backend, base de datos, autenticación, servicios, visibilidad pública ni dependencias.
+- Se documentó la ubicación de acciones en `MVP-V1-FINAL-SPEC.md` y `08_Use_Cases.md`.
+
+#### Verificación técnica
+
+- Frontend `npm run lint`: aprobado.
+- Frontend `npm run build`: aprobado.
+- `git diff --check`: aprobado en la revisión de implementación.
+- `openspec validate centralize-admin-product-actions --strict`: aprobado después de actualizar la documentación.
+- Seguimiento OpenSpec: 13/13 tareas completas; QA manual (3.1–3.6) y actualización externa de Jira (4.3) completados según confirmación del usuario.
+- Revisión estática de regresión: el catálogo conserva `product` y `onSelect`, filtros, paginación y detalle/Volver; ProductManager conserva sus callbacks, reglas de activación, filtros y página en App, regreso desde formulario/imágenes y refetch al volver al catálogo.
+- Esta revisión de código no sustituye el QA interactivo ni demuestra persistencia o respuestas HTTP en ejecución.
+
+#### QA manual aprobado
+
+- El usuario confirmó que el QA manual de SL-38 fue completado correctamente.
+- El catálogo principal no muestra Editar ni Gestionar imágenes con sesión admin.
+- Los accesos globales administrativos continúan visibles.
+- ProductManager conserva Editar, Gestionar imágenes y Activar/Desactivar.
+- La navegación y sincronización entre edición, gestor y catálogo funcionan sin F5.
+- Regresión SL-36 aprobada: productos no publicados continúan respondiendo 404 en detalle e imágenes públicas.
+- Regresión SL-37 aprobada: solo existen Disponible, Reservado y Vendido como estados comerciales.
+- Logout/login y controles administrativos funcionan correctamente.
+
+#### Resultado final del QA
+
+Implementación y QA de SL-38 aprobados. La evidencia manual proviene de la confirmación del usuario; no corresponde a una nueva ejecución del navegador por el agente.
+
+#### Cierre final y alcance
+
+- Jira SL-38 actualizado manualmente y finalizado según confirmación del usuario; no quedan tareas pendientes del change.
+- Se conserva fuera de alcance la limitación previa del gestor de imágenes para productos no publicados: utiliza la lectura pública, cuyo contrato responde 404 para productos no visibles, según el análisis de design.md.
+
+No se hizo commit ni se archivó el cambio.

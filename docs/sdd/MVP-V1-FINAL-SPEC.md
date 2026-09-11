@@ -128,6 +128,10 @@ El estado principal sigue concentrado en `App.jsx`; deberá revisarse en la fase
 ### Requirement
 El usuario no autenticado debe poder navegar el catálogo sin ver funciones administrativas.
 
+Las tarjetas del catálogo mantienen su función de showroom aun con sesión admin activa: no ofrecen Editar ni Gestionar imágenes. Los accesos globales Nuevo producto, Gestionar productos, Gestionar categorías y Cerrar sesión permanecen disponibles para el administrador.
+
+Los accesos por producto se centralizan en Gestionar productos: los activos ofrecen Editar, Gestionar imágenes y Desactivar; los inactivos ofrecen únicamente Activar.
+
 ### Acceptance Criteria
 - `GET /api/products` público.
 - Solo `is_active = true`.

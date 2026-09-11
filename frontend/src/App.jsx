@@ -400,17 +400,6 @@ function App() {
                   key={product.id}
                   product={product}
                   onSelect={() => setSelectedProductId(product.id)}
-                  onEdit={
-                    token
-                      ? () => {
-                          setEditingProduct(product);
-                          setShowProductForm(true);
-                        }
-                      : null
-                  }
-                  onManageImages={
-                    token ? () => setImageProductId(product.id) : null
-                  }
                 />
               ))}
             </div>
