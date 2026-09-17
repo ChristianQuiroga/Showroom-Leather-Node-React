@@ -47,6 +47,66 @@ Requirement → Repo inspection → Gap Analysis → Jira → OpenSpec proposal/
 
 El workflow indica el orden; no concede autorización automática para acciones externas, commits, archive o push. Una etapa no aplicable debe registrarse con su justificación, sin declararla ejecutada. Para cambios exclusivamente documentales, la verificación debe corresponder al contenido y a los scripts afectados; no inventar resultados de tests o QA funcional.
 
+## Modos de trabajo
+
+Si un prompt no especifica modo, usar **ANALYZE** por defecto. Ningún modo autoriza automáticamente pasar al siguiente: cada transición requiere instrucción o aprobación explícita del developer. Completar una etapa o aprobar una validación no implica autorización para continuar.
+
+Las conversaciones ChatGPT siguen siendo contexto auxiliar; el repositorio Git/GitHub, `docs/sdd`, OpenSpec y Jira continúan siendo las fuentes formales según sus responsabilidades.
+
+### ANALYZE
+
+- Solo lectura y análisis: puede inspeccionar documentación, código, Git y OpenSpec.
+- No puede modificar archivos, crear commits ni hacer push.
+- Debe informar Current State, Gap Analysis, riesgos y archivos probablemente afectados.
+- No ejecutar automáticamente comandos con efectos de escritura, como fetch o el chequeo integral `sdd-check.ps1`, bajo la autorización de solo lectura.
+
+### SPEC
+
+- Puede crear o modificar únicamente documentación de especificación/OpenSpec relacionada con el cambio.
+- No puede implementar código de aplicación.
+- No puede hacer commit ni push salvo autorización explícita para la operación correspondiente.
+- Debe detenerse para revisión/aprobación antes de pasar a implementación.
+
+### IMPLEMENT
+
+- Puede modificar únicamente los archivos necesarios para cumplir el OpenSpec aprobado.
+- Puede ejecutar tests, lint, build y validaciones.
+- No puede ampliar scope, hacer commit ni push.
+- Debe detenerse después de implementación y verificación para QA/revisión.
+
+### COMMIT
+
+- Solo puede ejecutarse con autorización explícita.
+- Debe revisar `git diff`, `git diff --check` y staging antes de crear el commit.
+- Debe incluir únicamente archivos aprobados para ese commit.
+- No implica push automático.
+
+### ARCHIVE
+
+- Solo puede ejecutarse con autorización explícita.
+- Archiva el OpenSpec aprobado y completado, con la sincronización de specs correspondiente.
+- Debe revisar los archivos generados por el archive.
+- El commit de archive debe permanecer separado del commit funcional y requiere autorización de COMMIT; archivar no autoriza commitear.
+
+### PUSH
+
+- Solo puede ejecutarse con autorización explícita.
+- Debe confirmar rama, upstream y ahead/behind antes del push, indicando la vigencia de las referencias remotas.
+- Después del push debe verificar sincronización con origin.
+
+### Ejemplos mínimos
+
+```text
+SL-40. Modo ANALYZE.
+SL-40. Modo SPEC.
+SL-40. Modo IMPLEMENT.
+SL-40. Modo COMMIT.
+SL-40. Modo ARCHIVE.
+SL-40. Modo PUSH.
+```
+
+Cada ejemplo representa una instrucción independiente del developer, no una secuencia automática. El modo no sustituye la identificación del cambio ni la aprobación de los archivos y del alcance correspondientes.
+
 ## Regla de fuente de verdad
 
 Prioridad de consulta:
