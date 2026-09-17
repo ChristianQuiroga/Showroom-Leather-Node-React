@@ -598,13 +598,17 @@ SL-38 fue commiteado en `a9a98ad` (`refactor: centralize admin product actions`)
 
 ---
 
-### Gestionar imágenes de productos activos no publicados
+### SL-39 — Permitir gestión admin de imágenes en productos no publicados
 
-**Estado:** Implementación completada, pruebas automatizadas y QA manual aprobadas, Jira completada; cambio listo para commit y archive.
+**Estado:** Done. Implementación completada, pruebas automatizadas y QA manual aprobadas; OpenSpec archivado.
 
 **Change:** `allow-admin-image-management-for-unpublished-products`
 
-**Jira:** tarea creada y movida a Done/Listo según confirmación del usuario; identificador no informado.
+**Jira:** `SL-39` — Done/Listo según confirmación del usuario.
+
+**Commit funcional:** `f6246bf` — `feat: allow admin image management for unpublished products`
+
+**Archive commit:** `70b6c07` — `chore: archive admin image management change`
 
 #### Problema
 
@@ -654,7 +658,7 @@ el flujo administrativo.
 - Implementación, pruebas automatizadas y QA manual completos y aprobados.
 - OpenSpec: 14/14 tareas completas; todas las tareas 1.x, 2.x, 3.x y 4.x están completas. La tarea 4.3 se completa con la confirmación del usuario sobre Jira.
 - `git diff --check`: aprobado; solo se informaron avisos de normalización LF/CRLF.
-- Jira completada según confirmación del usuario; no se realizó una actualización externa desde el agente.
-- El cambio está listo para commit y archive, sin tareas pendientes.
+- Jira SL-39 completada según confirmación del usuario; no se realizó una actualización externa desde el agente.
+- El cambio fue commiteado y archivado, sin tareas pendientes.
 
-Estado registrado antes del commit y archive autorizados para este cierre.
+OpenSpec archivado en `openspec/changes/archive/2026-09-17-allow-admin-image-management-for-unpublished-products/`, con la spec principal sincronizada en `openspec/specs/admin-product-image-access/spec.md`.
