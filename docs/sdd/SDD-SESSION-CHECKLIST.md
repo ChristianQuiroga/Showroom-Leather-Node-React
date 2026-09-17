@@ -4,10 +4,12 @@ Usar en cada sesión. Marcar solo hechos verificados; indicar “No aplica” co
 
 ## Inicio
 
-- [ ] Git branch correcta
-- [ ] Git status revisado
+- [ ] git fetch origin ejecutado manualmente
+- [ ] Branch correcta
+- [ ] Ahead/behind revisado
+- [ ] git status revisado
 - [ ] SDD-PROGRESS leído
-- [ ] Spec principal leída
+- [ ] MVP spec leída
 - [ ] OpenSpec activo identificado
 - [ ] Jira identificado
 
@@ -28,6 +30,9 @@ Usar en cada sesión. Marcar solo hechos verificados; indicar “No aplica” co
 - [ ] OpenSpec archive
 - [ ] Commit archive
 - [ ] Push
+- [ ] Local sincronizado con GitHub
 - [ ] Git status limpio
 
 Si quedan archivos conocidos/intencionales, registrarlos como excepción explícita al estado limpio y preservarlos. No modificar ni borrar untracked sin autorización.
+
+El script no ejecuta fetch. Si no se actualizan las referencias remotas, dejar ese control pendiente e informar que ahead/behind puede estar desactualizado; no afirmar sincronización con GitHub.

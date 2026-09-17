@@ -2,13 +2,18 @@
 
 ## Fuente de verdad
 
-- El repositorio Git es la fuente técnica definitiva.
-- `docs/sdd` es la fuente documental del proyecto.
-- OpenSpec define el contrato de cada cambio.
+1. Repositorio Git local / GitHub: fuente técnica definitiva.
+2. `docs/sdd`: fuente documental del proyecto.
+3. OpenSpec: contrato de cada cambio.
+4. Jira: gestión de work items y trazabilidad.
+5. Conversaciones ChatGPT: solo contexto auxiliar.
+
+- GitHub es la única fuente remota oficial.
+- El repositorio local puede estar adelantado respecto a GitHub mientras existen commits pendientes de push.
+- Antes de asumir el estado remoto se debe comprobar ahead/behind. Las referencias remotas locales pueden estar desactualizadas; `git fetch origin` permite actualizarlas manualmente antes de comparar.
+- ChatGPT no debe asumir que un cambio local existe en GitHub hasta que se confirme el push.
 - `docs/sdd/SDD-PROGRESS.md` define el estado actual y registra el historial real.
 - `docs/sdd/MVP-V1-FINAL-SPEC.md` define el alcance del MVP.
-- Jira gestiona los work items y su trazabilidad.
-- Drive es un espejo documental; no reemplaza al repositorio.
 - No asumir decisiones provenientes solamente de conversaciones de ChatGPT. Usarlas como contexto auxiliar y contrastarlas con el repositorio; registrar las nuevas decisiones aprobadas en los documentos pertinentes.
 
 ## Orden de lectura antes de trabajar
@@ -19,7 +24,7 @@
 4. OpenSpec activo, si existe: proposal, design, specs y tasks.
 5. Código relacionado con la tarea.
 
-Comprobar también `git status`, la rama actual y el último commit. Informar el Current State antes de proponer cambios. Consultar `docs/sdd/SDD-WORKFLOW.md` y usar `docs/sdd/SDD-SESSION-CHECKLIST.md` para el seguimiento de la sesión.
+Comprobar también `git status`, la rama actual, el último commit, origin, el upstream y ahead/behind respecto de `origin/main`. Informar el Current State antes de proponer cambios, aclarando si las referencias remotas se actualizaron. Consultar `docs/sdd/SDD-WORKFLOW.md` y usar `docs/sdd/SDD-SESSION-CHECKLIST.md` para el seguimiento de la sesión.
 
 ## Workflow obligatorio
 

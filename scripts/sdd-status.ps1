@@ -40,18 +40,72 @@ if ($insideRepo -notcontains 'true') {
 }
 
 $branch = @(Read-Git -GitArguments @('branch', '--show-current'))
+$branchName = if ($branch.Count -gt 0) { $branch[0] } else { $null }
 if ($branch.Count -eq 0) {
     $branch = @('HEAD separado (detached HEAD)')
 }
 Show-Section -Title 'Rama actual' -Lines $branch
 
-$hasCommit = @(& git --no-optional-locks -C $repoRoot rev-parse --verify --quiet HEAD)
-if ($LASTEXITCODE -eq 0) {
+$remotes = @(Read-Git -GitArguments @('remote'))
+$origin = if ($remotes -contains 'origin') {
+    @(Read-Git -GitArguments @('remote', 'get-url', '--all', 'origin'))
+} else {
+    @('(origin no configurado)')
+}
+Show-Section -Title 'Remote origin' -Lines $origin
+
+$localCommit = @(& git --no-optional-locks -C $repoRoot rev-parse --verify --quiet 'HEAD^{commit}')
+$hasLocalCommit = $LASTEXITCODE -eq 0
+if ($hasLocalCommit) {
     $lastCommit = @(Read-Git -GitArguments @('log', '-1', '--format=%h %s'))
 } else {
     $lastCommit = @('(sin commits)')
 }
-Show-Section -Title 'Ultimo commit' -Lines $lastCommit
+Show-Section -Title 'Ultimo commit local' -Lines $lastCommit
+
+$upstream = @()
+if ($branchName) {
+    $upstream = @(Read-Git -GitArguments @('for-each-ref', '--format=%(upstream)', ('refs/heads/' + $branchName)) |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+$upstreamRef = if ($upstream.Count -gt 0) { $upstream[0] } else { $null }
+$upstreamLabel = if ($upstreamRef) { $upstreamRef } else { '(sin upstream configurado)' }
+Show-Section -Title 'Upstream configurado' -Lines @($upstreamLabel)
+
+Show-Section -Title 'Alcance de la comparacion' -Lines @(
+    'Ahead/behind usa referencias remotas locales; pueden estar desactualizadas.',
+    'Para conocer el estado actual de GitHub, primero puede ejecutar manualmente: git fetch origin',
+    'Este script NO ejecuta fetch, pull ni push.'
+)
+
+function Show-Comparison {
+    param([string]$Title, [string]$Reference)
+
+    if (-not $Reference) {
+        Show-Section -Title $Title -Lines @('Ahead: no calculable', 'Behind: no calculable', 'Ultimo commit de referencia: no disponible')
+        return
+    }
+    $referenceCommit = @(& git --no-optional-locks -C $repoRoot rev-parse --verify --quiet ($Reference + '^{commit}'))
+    if ($LASTEXITCODE -ne 0) {
+        Show-Section -Title $Title -Lines @('Ahead: no calculable', 'Behind: no calculable', 'Referencia no disponible localmente: ' + $Reference)
+        return
+    }
+    $referenceLog = @(Read-Git -GitArguments @('log', '-1', '--format=%h %s', $referenceCommit[0], '--'))
+    $lines = @('Ultimo commit de referencia: ' + $referenceLog[0])
+    if ($hasLocalCommit) {
+        $counts = @(Read-Git -GitArguments @('rev-list', '--left-right', '--count', ($localCommit[0] + '...' + $referenceCommit[0]), '--'))
+        $parts = $counts[0].Trim() -split '\s+'
+        $lines += 'Ahead: ' + $parts[0]
+        $lines += 'Behind: ' + $parts[1]
+    } else {
+        $lines += 'Ahead: no calculable (sin commit local)'
+        $lines += 'Behind: no calculable (sin commit local)'
+    }
+    Show-Section -Title $Title -Lines $lines
+}
+
+Show-Comparison -Title 'Comparacion con upstream' -Reference $upstreamRef
+Show-Comparison -Title 'Comparacion con origin/main' -Reference 'refs/remotes/origin/main'
 
 Show-Section -Title 'Git status --short' -Lines @(Read-Git -GitArguments @('status', '--short', '--untracked-files=all'))
 Show-Section -Title 'Cambios en docs/sdd' -Lines @(Read-Git -GitArguments @('status', '--short', '--untracked-files=all', '--', 'docs/sdd/'))

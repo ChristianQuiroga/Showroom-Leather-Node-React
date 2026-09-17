@@ -12,8 +12,24 @@ Este flujo organiza cambios verificables y reutilizables mediante Spec-Driven De
 | OpenSpec | Contrato de cambio: propuesta, diseño, specs y tareas. |
 | SDD-PROGRESS | Historial y estado real del proyecto, con evidencia y pendientes. |
 | Jira | Gestión y trazabilidad de work items. |
-| Git | Evidencia técnica y versionado. |
-| Drive | Espejo documental accesible por ChatGPT. |
+| Git / GitHub | Evidencia técnica y versionado; GitHub es la única fuente remota oficial. |
+
+## Arquitectura objetivo
+
+```text
+Developer / VS Code
+        |
+        v
+Local Git repository
+        |
+        v
+      GitHub
+      |    |
+      v    v
+ ChatGPT  Codex
+```
+
+`docs/sdd` permanece como documentación fuente dentro del repositorio, OpenSpec como contrato de cambios y Jira como gestión. ChatGPT y Codex deben distinguir el contenido publicado en GitHub de los cambios y commits locales pendientes de push.
 
 ## Flujo estándar
 
@@ -35,16 +51,37 @@ El workflow indica el orden; no concede autorización automática para acciones 
 
 Prioridad de consulta:
 
-1. Git/repo: evidencia técnica definitiva del comportamiento implementado.
+1. Repositorio Git local / GitHub: evidencia técnica definitiva del comportamiento implementado.
 2. `docs/sdd`: documentación del proyecto; SDD-PROGRESS registra el estado y MVP-V1-FINAL-SPEC define el alcance del MVP.
 3. OpenSpec: contrato aprobado de cada cambio.
 4. Jira: gestión y trazabilidad del trabajo.
-5. Drive: espejo documental.
-6. Conversaciones: contexto auxiliar.
+5. Conversaciones ChatGPT: solo contexto auxiliar.
 
 La prioridad no convierte un comportamiento incorrecto del código en una decisión aprobada. Si el código, las specs y la documentación divergen, informar la diferencia entre estado actual y esperado antes de decidir una corrección. No asumir decisiones provenientes solamente de conversaciones de ChatGPT.
 
-Drive NO reemplaza al repositorio y puede estar temporalmente desactualizado. Verificar sus copias contra la versión del repositorio antes de usarlas como base. La sincronización con Drive se definirá después de confirmar la ubicación física de su carpeta en Windows; este workflow no instala ni crea esa sincronización.
+GitHub es la única fuente remota oficial. El repositorio local puede estar adelantado mientras existen commits pendientes de push. ChatGPT no debe asumir que un cambio local existe en GitHub hasta que se confirme el push.
+
+## Estado local vs remoto
+
+Antes de iniciar una tarea comprobar:
+
+- Branch actual.
+- Working tree, incluidos archivos untracked.
+- Último commit local.
+- Remote `origin` configurado y su URL.
+- Upstream configurado y ahead/behind respecto de ese upstream.
+- Ahead/behind respecto de `origin/main`; si no existe esa referencia, informar que no se puede calcular.
+- OpenSpec activos, excluyendo `archive`.
+
+Ahead indica commits locales ausentes en la referencia comparada; behind indica commits de esa referencia ausentes localmente. Ambos pueden ser mayores que cero si las historias divergen. Un working tree con cambios puede coexistir con ahead/behind en cero.
+
+Estos valores usan las referencias remotas guardadas localmente y no garantizan el estado actual de GitHub. Para actualizar esas referencias primero puede ejecutarse manualmente:
+
+```powershell
+git fetch origin
+```
+
+Después, volver a comprobar ahead/behind. Si no se ejecutó fetch, reportar esa limitación y no afirmar sincronización actual con GitHub. El script no ejecuta fetch, pull ni push y no modifica archivos. Una rama sin upstream o con una referencia no disponible se informa como no calculable, no como sincronizada.
 
 ## Inicio de una sesión nueva
 
@@ -57,6 +94,7 @@ Antes de trabajar:
 - Comprobar `git status` e identificar cambios locales y archivos untracked.
 - Comprobar la branch actual.
 - Identificar el último commit.
+- Revisar origin, upstream y ahead/behind según la sección Estado local vs remoto.
 - Identificar el work item de Jira y la autorización disponible.
 - Leer el código relacionado e informar Current State antes de proponer cambios.
 
@@ -66,7 +104,7 @@ El script de consulta se ejecuta desde la raíz:
 powershell -ExecutionPolicy Bypass -File scripts/sdd-status.ps1
 ```
 
-Solo usa PowerShell y el Git ya instalado para trabajar con el repositorio. No requiere módulos, paquetes ni la CLI de OpenSpec. Es de solo lectura y no consulta Jira ni Drive. Enumera como activos los directorios inmediatos de `openspec/changes` distintos de `archive`; no evalúa la aprobación ni la completitud de sus tareas.
+Solo usa PowerShell y el Git ya instalado para trabajar con el repositorio. No requiere módulos, paquetes ni la CLI de OpenSpec. Es de solo lectura y no consulta Jira ni realiza operaciones de red. Enumera como activos los directorios inmediatos de `openspec/changes` distintos de `archive`; no evalúa la aprobación ni la completitud de sus tareas.
 
 ## Cierre de una tarea
 
@@ -80,6 +118,7 @@ Solo usa PowerShell y el Git ya instalado para trabajar con el repositorio. No r
 - [ ] OpenSpec archivado y specs sincronizadas y validadas.
 - [ ] Commit archive creado y revisado.
 - [ ] Push realizado con autorización.
+- [ ] Local sincronizado con GitHub, con referencias remotas actualizadas y ahead/behind comprobado.
 - [ ] Working tree limpio salvo archivos conocidos/intencionales, identificados en el reporte.
 
 Reportar archivos modificados, pruebas realizadas, commits y pendientes. Nunca modificar o borrar archivos untracked sin autorización ni incluir archivos no relacionados. La checklist de sesión está en `SDD-SESSION-CHECKLIST.md`.
