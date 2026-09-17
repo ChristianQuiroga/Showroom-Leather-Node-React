@@ -594,4 +594,67 @@ Implementación y QA de SL-38 aprobados. La evidencia manual proviene de la conf
 - Jira SL-38 actualizado manualmente y finalizado según confirmación del usuario; no quedan tareas pendientes del change.
 - Se conserva fuera de alcance la limitación previa del gestor de imágenes para productos no publicados: utiliza la lectura pública, cuyo contrato responde 404 para productos no visibles, según el análisis de design.md.
 
-No se hizo commit ni se archivó el cambio.
+SL-38 fue commiteado en `a9a98ad` (`refactor: centralize admin product actions`) y archivado en `openspec/changes/archive/2026-09-11-centralize-admin-product-actions/`.
+
+---
+
+### Gestionar imágenes de productos activos no publicados
+
+**Estado:** Implementación completada, pruebas automatizadas y QA manual aprobadas, Jira completada; cambio listo para commit y archive.
+
+**Change:** `allow-admin-image-management-for-unpublished-products`
+
+**Jira:** tarea creada y movida a Done/Listo según confirmación del usuario; identificador no informado.
+
+#### Problema
+
+ProductManager ofrecía Gestionar imágenes para productos activos no publicados,
+pero ProductImageManager cargaba la colección mediante el endpoint público. La
+regla de visibilidad pública respondía correctamente `404`, impidiendo completar
+el flujo administrativo.
+
+#### Implementación
+
+- Se agregó `GET /api/products/admin/:productId/images` con `authenticate` y
+  `authorizeAdmin`.
+- La lectura administrativa reutiliza `validateProductForImageChanges`, la misma
+  validación de las mutaciones: inexistente → `404`; inactivo → `409`.
+- Un producto activo puede listar sus imágenes aunque `is_published = false`.
+- El endpoint público permanece sin cambios: solo expone imágenes de productos
+  activos y publicados.
+- ProductImageManager usa la lectura administrativa en la carga inicial y en los
+  refetch posteriores a subir, marcar principal y eliminar.
+- ProductDetail conserva la lectura pública.
+- No se modificaron navegación, diseño visual, JWT global, Cloudinary, base de
+  datos ni dependencias.
+
+#### Verificación automática
+
+- Backend `npm test`: 2 suites y 61 tests aprobados.
+- Se cubrió público publicado/no publicado/inactivo; admin publicado/no
+  publicado/sin imágenes/inactivo/inexistente/sin token/no admin.
+- Regresión automatizada de subir, marcar principal y eliminar aprobada con
+  Cloudinary simulado; no se realizó una operación real contra el proveedor.
+- Frontend `npm run lint`: aprobado.
+- Frontend `npm run build`: aprobado.
+- OpenSpec strict: aprobado.
+
+#### QA manual aprobado
+
+- QA manual completado y aprobado según confirmación del usuario el 2026-09-17; esta actualización documental no implica una nueva ejecución de las pruebas.
+- Público: activo/publicado → `200`; activo/no publicado, inactivo e inexistente → `404`.
+- Admin: activo/publicado y activo/no publicado → `200`; inactivo → `409`; inexistente → `404`.
+- Autorización: sin token → `401`; token válido con `role=customer` → `403`; token admin → acceso permitido.
+- ProductManager permite gestionar imágenes de productos activos, incluidos los no publicados; los inactivos no muestran Gestionar imágenes.
+- ProductDetail mantiene el comportamiento público.
+- Subir, marcar principal y eliminar imágenes continúan funcionando correctamente.
+
+#### Resultado del cierre técnico
+
+- Implementación, pruebas automatizadas y QA manual completos y aprobados.
+- OpenSpec: 14/14 tareas completas; todas las tareas 1.x, 2.x, 3.x y 4.x están completas. La tarea 4.3 se completa con la confirmación del usuario sobre Jira.
+- `git diff --check`: aprobado; solo se informaron avisos de normalización LF/CRLF.
+- Jira completada según confirmación del usuario; no se realizó una actualización externa desde el agente.
+- El cambio está listo para commit y archive, sin tareas pendientes.
+
+Estado registrado antes del commit y archive autorizados para este cierre.

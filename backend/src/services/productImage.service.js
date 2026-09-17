@@ -64,6 +64,12 @@ export const getProductImages = async (productId) => {
   return productImageRepository.findAllByProductId(productId);
 };
 
+export const getAdminProductImages = async (productId) => {
+  await validateProductForImageChanges(productId);
+
+  return productImageRepository.findAllByProductId(productId);
+};
+
 export const addProductImage = async (
   productId,
   { fileBuffer, altText, isMain, displayOrder },

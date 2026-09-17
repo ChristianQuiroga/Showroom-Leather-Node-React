@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import {
-  getProductImages,
+  getAdminProductImages,
   uploadProductImage,
   setMainProductImage,
   deleteProductImage,
@@ -23,7 +23,7 @@ function ProductImageManager({
 
   const loadImages = async () => {
     try {
-      const response = await getProductImages(productId);
+      const response = await getAdminProductImages(productId, token);
       setImages(response.data);
       setError("");
     } catch (error) {
@@ -37,7 +37,7 @@ function ProductImageManager({
 
     const loadInitialImages = async () => {
       try {
-        const response = await getProductImages(productId);
+        const response = await getAdminProductImages(productId, token);
 
         if (!ignore) {
           setImages(response.data);
@@ -56,7 +56,7 @@ function ProductImageManager({
     return () => {
       ignore = true;
     };
-  }, [onAuthError, productId]);
+  }, [onAuthError, productId, token]);
 
   const handleUpload = async (event) => {
     event.preventDefault();

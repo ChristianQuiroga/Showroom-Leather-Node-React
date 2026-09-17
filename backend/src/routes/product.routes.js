@@ -11,10 +11,18 @@ import {
 } from "../controllers/product.controller.js";
 
 import productImageRoutes from "./productImage.routes.js";
+import { getAdminProductImages } from "../controllers/productImage.controller.js";
 
 import { authenticate, authorizeAdmin } from "../middlewares/auth.middleware.js";
 
 const router = Router();
+
+router.get(
+  "/admin/:productId/images",
+  authenticate,
+  authorizeAdmin,
+  getAdminProductImages,
+);
 
 router.use("/:productId/images", productImageRoutes);
 

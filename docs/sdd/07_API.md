@@ -37,7 +37,19 @@ Debe devolver información completa del producto.
 ## 3. Imágenes
 
 ### GET /api/products/:productId/images
-Público.
+Público. Solo devuelve imágenes cuando el producto está activo y publicado.
+Para productos inexistentes, inactivos o no publicados responde `404`.
+
+### GET /api/products/admin/:productId/images
+Admin + JWT.
+
+- producto activo y publicado → `200`;
+- producto activo y no publicado → `200`;
+- producto activo sin imágenes → colección vacía;
+- producto inactivo → `409`;
+- producto inexistente → `404`;
+- sin JWT → `401`;
+- usuario autenticado sin rol admin → `403`.
 
 ### POST /api/products/:productId/images
 Admin + JWT.

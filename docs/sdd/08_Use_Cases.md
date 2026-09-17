@@ -150,6 +150,12 @@ Puede:
 
 **Acceso:** Gestionar imágenes desde Gestionar productos para un producto activo; este acceso no aparece en las tarjetas del catálogo.
 
+La lectura administrativa requiere JWT y rol admin. Permite cargar la colección
+de un producto activo publicado o no publicado. Los productos inactivos no
+ofrecen el acceso y una solicitud administrativa directa responde `409`.
+La galería pública continúa respondiendo `404` para productos inactivos o no
+publicados.
+
 Puede:
 - subir;
 - seleccionar principal;
@@ -161,6 +167,9 @@ Puede:
 - Cloudinary sincronizado;
 - card actualiza imagen principal;
 - error no genera divergencia.
+- producto activo no publicado puede listar y gestionar sus imágenes;
+- lectura administrativa sin JWT → 401;
+- lectura administrativa sin rol admin → 403.
 
 ---
 

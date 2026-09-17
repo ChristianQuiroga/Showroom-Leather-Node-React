@@ -1,7 +1,10 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
+import { Writable } from "node:stream";
+import { jest } from "@jest/globals";
 
 import app from "../src/app.js";
+import cloudinary from "../src/config/cloudinary.js";
 import pool from "../src/config/database.js";
 import env from "../src/config/env.js";
 
@@ -16,6 +19,7 @@ let publicProductId;
 let inactiveProductId;
 let unpublishedProductId;
 let unpublishedProductName;
+let emptyProductId;
 
 beforeAll(async () => {
   const loginResponse = await request(app).post("/api/auth/login").send({
@@ -65,7 +69,8 @@ beforeAll(async () => {
       VALUES
         ($1, $2, 'Fixture público', $7, 'Cuero', 'Negro', 'M', 1000, 1, 'available', false, true, true),
         ($3, $4, 'Fixture inactivo', $7, 'Cuero', 'Negro', 'M', 1000, 1, 'available', false, true, false),
-        ($5, $6, 'Fixture no publicado', $7, 'Cuero', 'Negro', 'M', 1000, 1, 'available', false, false, true)
+        ($5, $6, 'Fixture no publicado', $7, 'Cuero', 'Negro', 'M', 1000, 1, 'available', false, false, true),
+        ($8, $9, 'Fixture sin imágenes', $7, 'Cuero', 'Negro', 'M', 1000, 1, 'available', false, true, true)
       RETURNING id, name, is_active, is_published
     `,
     [
@@ -76,6 +81,8 @@ beforeAll(async () => {
       `UNP-${fixtureSuffix}`,
       `Producto no publicado ${fixtureSuffix}`,
       categoryResult.rows[0].id,
+      `EMP-${fixtureSuffix}`,
+      `Producto sin imágenes ${fixtureSuffix}`,
     ],
   );
 
@@ -88,15 +95,20 @@ beforeAll(async () => {
   const unpublishedProduct = productsResult.rows.find(
     (product) => product.is_active && !product.is_published,
   );
+  const emptyProduct = productsResult.rows.find(
+    (product) => product.name.startsWith("Producto sin imágenes"),
+  );
 
   publicProductId = publicProduct.id;
   inactiveProductId = inactiveProduct.id;
   unpublishedProductId = unpublishedProduct.id;
   unpublishedProductName = unpublishedProduct.name;
+  emptyProductId = emptyProduct.id;
   visibilityFixtureIds.push(
     publicProductId,
     inactiveProductId,
     unpublishedProductId,
+    emptyProductId,
   );
 
   await pool.query(
@@ -444,6 +456,18 @@ describe("Product endpoints", () => {
         product_id: publicProductId,
         alt_text: "Imagen pública",
       });
+      expect(Object.keys(response.body.data[0]).sort()).toEqual(
+        [
+          "alt_text",
+          "created_at",
+          "display_order",
+          "id",
+          "image_url",
+          "is_main",
+          "product_id",
+          "public_id",
+        ].sort(),
+      );
     });
 
     test.each([
@@ -462,12 +486,8 @@ describe("Product endpoints", () => {
     });
 
     test("Debe devolver una colección vacía para un producto público sin imágenes", async () => {
-      await pool.query("DELETE FROM product_images WHERE product_id = $1", [
-        publicProductId,
-      ]);
-
       const response = await request(app).get(
-        `/api/products/${publicProductId}/images`,
+        `/api/products/${emptyProductId}/images`,
       );
 
       expect(response.statusCode).toBe(200);
@@ -484,6 +504,161 @@ describe("Product endpoints", () => {
         status: "error",
         message: "El ID del producto no es válido",
       });
+    });
+  });
+
+  describe("GET /api/products/admin/:productId/images", () => {
+    test("Debe devolver 401 si no se envía token", async () => {
+      const response = await request(app).get(
+        `/api/products/admin/${publicProductId}/images`,
+      );
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body).not.toHaveProperty("data");
+    });
+
+    test("Debe devolver 403 si el usuario no es administrador", async () => {
+      const response = await request(app)
+        .get(`/api/products/admin/${publicProductId}/images`)
+        .set("Authorization", `Bearer ${nonAdminToken}`);
+
+      expect(response.statusCode).toBe(403);
+      expect(response.body).not.toHaveProperty("data");
+    });
+
+    test.each([
+      ["publicado", () => publicProductId, "Imagen pública"],
+      ["no publicado", () => unpublishedProductId, "Metadato privado no publicado"],
+    ])(
+      "Debe devolver imágenes de un producto activo %s al administrador",
+      async (_state, id, altText) => {
+        const response = await request(app)
+          .get(`/api/products/admin/${id()}/images`)
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.data).toHaveLength(1);
+        expect(response.body.data[0]).toMatchObject({
+          product_id: id(),
+          alt_text: altText,
+        });
+      },
+    );
+
+    test("Debe devolver una colección vacía para un producto activo sin imágenes", async () => {
+      const response = await request(app)
+        .get(`/api/products/admin/${emptyProductId}/images`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.data).toEqual([]);
+    });
+
+    test("Debe devolver 409 para un producto inactivo", async () => {
+      const response = await request(app)
+        .get(`/api/products/admin/${inactiveProductId}/images`)
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(409);
+      expect(response.body).toHaveProperty(
+        "message",
+        "No se pueden modificar imágenes de un producto desactivado",
+      );
+      expect(response.body).not.toHaveProperty("data");
+    });
+
+    test("Debe devolver 404 para un producto inexistente", async () => {
+      const response = await request(app)
+        .get("/api/products/admin/2147483646/images")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty("message", "Producto no encontrado");
+      expect(response.body).not.toHaveProperty("data");
+    });
+
+    test("Debe conservar subir, marcar principal y eliminar imágenes", async () => {
+      const uploadSpy = jest
+        .spyOn(cloudinary.uploader, "upload_stream")
+        .mockImplementation((_options, callback) => {
+          return new Writable({
+            write(_chunk, _encoding, done) {
+              done();
+            },
+            final(done) {
+              callback(null, {
+                secure_url: "https://example.test/uploaded.webp",
+                public_id: `test-upload-${emptyProductId}`,
+              });
+              done();
+            },
+          });
+        });
+
+      try {
+        const uploadResponse = await request(app)
+          .post(`/api/products/${emptyProductId}/images`)
+          .set("Authorization", `Bearer ${adminToken}`)
+          .attach("image", Buffer.from("imagen-de-prueba"), {
+            filename: "imagen.webp",
+            contentType: "image/webp",
+          });
+
+        expect(uploadResponse.statusCode).toBe(201);
+        expect(uploadResponse.body.data).toMatchObject({
+          product_id: emptyProductId,
+          is_main: true,
+        });
+
+        const secondaryResult = await pool.query(
+          `
+            INSERT INTO product_images (
+              product_id,
+              image_url,
+              public_id,
+              alt_text,
+              is_main,
+              display_order
+            )
+            VALUES ($1, $2, NULL, 'Imagen secundaria de prueba', false, 1)
+            RETURNING id
+          `,
+          [emptyProductId, "https://example.test/secondary.webp"],
+        );
+        const secondaryImageId = secondaryResult.rows[0].id;
+
+        const mainResponse = await request(app)
+          .patch(
+            `/api/products/${emptyProductId}/images/${secondaryImageId}/main`,
+          )
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(mainResponse.statusCode).toBe(200);
+        expect(mainResponse.body.data).toMatchObject({
+          id: secondaryImageId,
+          is_main: true,
+        });
+
+        const deleteResponse = await request(app)
+          .delete(`/api/products/${emptyProductId}/images/${secondaryImageId}`)
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(deleteResponse.statusCode).toBe(200);
+        expect(deleteResponse.body.data).toHaveProperty("id", secondaryImageId);
+
+        const adminReadResponse = await request(app)
+          .get(`/api/products/admin/${emptyProductId}/images`)
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(adminReadResponse.statusCode).toBe(200);
+        expect(adminReadResponse.body.data).toHaveLength(1);
+        expect(adminReadResponse.body.data[0]).toHaveProperty(
+          "id",
+          uploadResponse.body.data.id,
+        );
+      } finally {
+        uploadSpy.mockRestore();
+      }
     });
   });
 

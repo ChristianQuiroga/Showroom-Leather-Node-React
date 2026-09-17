@@ -6,6 +6,13 @@ export const getProductImages = async (productId) => {
   });
 };
 
+export const getAdminProductImages = async (productId, token) => {
+  return apiRequest(`/products/admin/${productId}/images`, {
+    token,
+    fallbackMessage: "No se pudieron obtener las imágenes",
+  });
+};
+
 export const uploadProductImage = async (
   productId,
   { file, altText },

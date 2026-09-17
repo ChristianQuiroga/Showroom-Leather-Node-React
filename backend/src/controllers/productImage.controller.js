@@ -28,6 +28,24 @@ export const getProductImages = async (req, res) => {
   });
 };
 
+export const getAdminProductImages = async (req, res) => {
+  const productId = parsePositiveId(req.params.productId);
+
+  if (!productId) {
+    return res.status(400).json({
+      status: "error",
+      message: "El ID del producto no es válido",
+    });
+  }
+
+  const images = await productImageService.getAdminProductImages(productId);
+
+  res.status(200).json({
+    status: "success",
+    data: images,
+  });
+};
+
 export const addProductImage = async (req, res) => {
   const productId = parsePositiveId(req.params.productId);
 
