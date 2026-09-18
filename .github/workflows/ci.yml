@@ -76,7 +76,10 @@ jobs:
         run: npm run seed
       # La suite existente simula upload y elimina imágenes con public_id NULL.
       - name: Tests backend
-        run: npm test
+        run: |
+          npm test
+          # QA TEMPORAL: fallo controlado exclusivo del job backend.
+          exit 1
 
   frontend:
     name: Frontend
