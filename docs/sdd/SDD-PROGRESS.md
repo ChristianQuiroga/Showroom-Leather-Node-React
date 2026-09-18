@@ -667,7 +667,7 @@ OpenSpec archivado en `openspec/changes/archive/2026-09-17-allow-admin-image-man
 
 ### configure-github-actions-ci — Integración continua
 
-**Estado:** implementación local completada el 2026-09-17; pendiente de validación Linux y QA remoto. Contrato aprobado por instrucción explícita del developer en modo IMPLEMENT. Jira: identificador no informado; no actualizado.
+**Estado:** implementación completada; CI en Linux por push a main y pull_request validado; fallos controlados backend/frontend, recuperación y QA final de infraestructura aprobados el 2026-09-18. Cierre funcional completo: 12/12 tareas. Contrato aprobado por instrucción explícita del developer en modo IMPLEMENT. Jira: Done/Listo, marcado manualmente por el developer según su confirmación del 2026-09-18; identificador no informado.
 
 - Creado `.github/workflows/ci.yml`: push a main y PR hacia main, jobs backend/frontend independientes, Ubuntu 24.04, Node 24.x, npm ci y cache por lockfile.
 - Backend: postgres:18 efímero con health check, unaccent, cinco migraciones sin .env, seed y npm test. Frontend: lint y build.
@@ -675,4 +675,23 @@ OpenSpec archivado en `openspec/changes/archive/2026-09-17-allow-admin-image-man
 
 **Validación local:** actionlint aprobado (sin ShellCheck). En copia temporal de archivos versionados sin .env ni node_modules previos, Node 24.14.0: npm ci aprobado en ambos proyectos; PostgreSQL 18.3 temporal y aislado en Windows, desde base vacía, completó unaccent, migraciones y seed; backend 2 suites y 61/61 tests aprobados; frontend lint/build aprobados. No se utilizó la base de desarrollo del proyecto.
 
-**Pendientes:** Docker no tenía motor activo; no se ejecutó postgres:18 en Linux ni GitHub Actions. Faltan comprobar triggers reales, resultados separados, fallos controlados y QA de jobs/logs. La evidencia local no equivale a CI remoto aprobado. No hubo commit, push, archive ni actualización de Jira.
+**Evidencia remota confirmada por el developer:** [GitHub Actions, run 35402784406](https://github.com/ChristianQuiroga/Showroom-Leather-Node-React/actions/runs/35402784406), disparado por push a main del commit `f786078e11b0819554efa11ddfa741b2b17eca9f` (`ci: add GitHub Actions validation workflow`). Frontend: success con Node 24, npm ci, lint y build. Backend: success con postgres:18 en runner Linux, unaccent, migraciones, seed y npm test; contenedor detenido correctamente. Esta evidencia resuelve la validación Linux pendiente de la prueba local y completa la tarea 3.1.
+
+**Validación real por PR:** rama temporal `ci-qa-validation` desde main f786078; [PR #1](https://github.com/ChristianQuiroga/Showroom-Leather-Node-React/pull/1) hacia main, abierto en borrador y sin merge. Resultados consultados en GitHub Actions:
+
+| Commit temporal | Ejecución pull_request | Backend | Frontend |
+| --- | --- | --- | --- |
+| a748939 — fallo backend | [35404612949](https://github.com/ChristianQuiroga/Showroom-Leather-Node-React/actions/runs/35404612949) | failure | success |
+| 5138d5c — reversión backend | [35404739107](https://github.com/ChristianQuiroga/Showroom-Leather-Node-React/actions/runs/35404739107) | success | success |
+| d4e6740 — fallo frontend | [35404753135](https://github.com/ChristianQuiroga/Showroom-Leather-Node-React/actions/runs/35404753135) | success | failure |
+| f19a681 — reversión frontend | [35404840646](https://github.com/ChristianQuiroga/Showroom-Leather-Node-React/actions/runs/35404840646) | success | success |
+
+Se inyectó `exit 1` temporalmente en el workflow después de npm test y, por separado, después del build. Ambas ejecuciones fallaron globalmente sin impedir el éxito del otro job. No se modificó código funcional; no se probaron fallos individuales de cada comando de preparación. Tras las reversiones, `git diff main HEAD` está vacío y el PR vuelve a tener ambos jobs verdes. Documentación pendiente preservada fuera de los commits temporales; main no recibió estos commits.
+
+**QA final de infraestructura (3.4): aprobado el 2026-09-18.** Revisión directa de jobs/steps de las cinco ejecuciones, logs backend de todas ellas y logs frontend del fallo y recuperación final. Confirmados 61/61 tests backend, fallos por exit 1 posteriores a tests/build exitosos, independencia de jobs y recuperación. Los logs muestran eliminación de cada contenedor PostgreSQL y su red, incluso ante fallo. Workflow sin secretos reales de aplicación ni .env real; usa valores ficticios y el token automático de Actions con Contents: read y Metadata: read.
+
+Cloudinary: los recorridos de tests revisados usan mock de upload y delete con public_id NULL, evitando llamadas reales al proveedor. Conclusión basada en código y ejecución, sin captura de tráfico ni bloqueo global de red; no se afirma una auditoría de toda la red del runner.
+
+Sin cambios funcionales, de dependencias, lockfiles, E2E ni sdd-check.ps1. Los cuatro commits temporales solo tocaron el workflow y se revirtieron; main local y remoto consultado siguen en f786078. `git diff main HEAD` vacío. OpenSpec strict y git diff --check aprobados. Detalle de la revisión registrado en tasks.md.
+
+**Cierre funcional — 2026-09-18:** el developer confirmó Jira Done/Listo, actualizado manualmente por él; 4.2 completada con esa confirmación externa. Total: 12/12 tareas completas. CI validado por push y pull_request, fallos controlados backend/frontend comprobados y revertidos, QA de infraestructura aprobado. Change listo para archive una vez registrada mediante commit autorizado la evidencia documental pendiente, conforme al workflow del proyecto. El PR y la rama se conservan para revisión. Esta actualización no realiza commit, push, merge, cierre de PR, eliminación de rama, archive ni modificación externa de Jira.
