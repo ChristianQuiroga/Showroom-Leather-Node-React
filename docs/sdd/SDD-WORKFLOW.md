@@ -182,3 +182,13 @@ Solo usa PowerShell y el Git ya instalado para trabajar con el repositorio. No r
 - [ ] Working tree limpio salvo archivos conocidos/intencionales, identificados en el reporte.
 
 Reportar archivos modificados, pruebas realizadas, commits y pendientes. Nunca modificar o borrar archivos untracked sin autorización ni incluir archivos no relacionados. La checklist de sesión está en `SDD-SESSION-CHECKLIST.md`.
+
+## Integración continua con GitHub Actions
+
+El workflow `.github/workflows/ci.yml` configura push a `main` y pull requests hacia `main`, con jobs independientes backend/frontend en Ubuntu 24.04 y Node 24.x. Cada job ejecuta `npm ci` y usa cache npm asociado a su lockfile; no se cachea node_modules.
+
+Backend prepara un servicio efímero `postgres:18` con health check, habilita unaccent, aplica migraciones mediante `node ./node_modules/node-pg-migrate/bin/node-pg-migrate up` (sin el script que exige .env), ejecuta seed y `npm test`. Frontend ejecuta `npm run lint` y `npm run build`.
+
+Solo se usan variables ficticias de CI, sin .env real ni secretos de aplicación. Los tests existentes simulan upload y evitan el borrado remoto de Cloudinary. No agregar credenciales reales para resolver fallos. El workflow usa `contents: read`, checkout sin credenciales persistentes y acciones fijadas a SHA; no realiza deploy. Un control obligatorio fallido hace fallar CI.
+
+Estado inicial: implementado localmente, pendiente de publicación autorizada y QA en Actions. Las verificaciones locales no prueban los triggers ni el servicio Linux. Registrar ejecuciones reales y pruebas de fallo antes del cierre del change `configure-github-actions-ci`; CI no sustituye QA manual ni autoriza commit/push. `scripts/sdd-check.ps1` permanece sin cambios.

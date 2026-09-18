@@ -662,3 +662,17 @@ el flujo administrativo.
 - El cambio fue commiteado y archivado, sin tareas pendientes.
 
 OpenSpec archivado en `openspec/changes/archive/2026-09-17-allow-admin-image-management-for-unpublished-products/`, con la spec principal sincronizada en `openspec/specs/admin-product-image-access/spec.md`.
+
+---
+
+### configure-github-actions-ci — Integración continua
+
+**Estado:** implementación local completada el 2026-09-17; pendiente de validación Linux y QA remoto. Contrato aprobado por instrucción explícita del developer en modo IMPLEMENT. Jira: identificador no informado; no actualizado.
+
+- Creado `.github/workflows/ci.yml`: push a main y PR hacia main, jobs backend/frontend independientes, Ubuntu 24.04, Node 24.x, npm ci y cache por lockfile.
+- Backend: postgres:18 efímero con health check, unaccent, cinco migraciones sin .env, seed y npm test. Frontend: lint y build.
+- Variables ficticias, permisos contents: read, acciones fijadas a SHA y checkout sin persistencia de credenciales. Se conservan las simulaciones existentes de Cloudinary; sin secretos reales, deploy ni cambios funcionales o de dependencias.
+
+**Validación local:** actionlint aprobado (sin ShellCheck). En copia temporal de archivos versionados sin .env ni node_modules previos, Node 24.14.0: npm ci aprobado en ambos proyectos; PostgreSQL 18.3 temporal y aislado en Windows, desde base vacía, completó unaccent, migraciones y seed; backend 2 suites y 61/61 tests aprobados; frontend lint/build aprobados. No se utilizó la base de desarrollo del proyecto.
+
+**Pendientes:** Docker no tenía motor activo; no se ejecutó postgres:18 en Linux ni GitHub Actions. Faltan comprobar triggers reales, resultados separados, fallos controlados y QA de jobs/logs. La evidencia local no equivale a CI remoto aprobado. No hubo commit, push, archive ni actualización de Jira.

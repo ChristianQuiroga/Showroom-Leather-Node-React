@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+        shell: bash
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: showroom_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d showroom_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    # Valores desechables de CI; no son credenciales del proyecto.
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ci_user:ci_password@localhost:5432/showroom_ci
+      JWT_SECRET: ci-only-jwt-secret-not-for-production
+      TEST_ADMIN_PASSWORD: ci-only-admin-password
+      SEED_ADMIN_NAME: CI Admin
+      SEED_ADMIN_EMAIL: admin@showroom.com
+      SEED_ADMIN_PASSWORD: ci-only-admin-password
+      CLOUDINARY_CLOUD_NAME: ci-placeholder
+      CLOUDINARY_API_KEY: ci-placeholder
+      CLOUDINARY_API_SECRET: ci-placeholder
+      WHATSAPP_PHONE: '540000000000'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Habilitar unaccent
+        run: |
+          node --input-type=module <<'NODE'
+          import pg from 'pg';
+          const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+          try {
+            await client.connect();
+            await client.query('CREATE EXTENSION IF NOT EXISTS unaccent');
+          } finally {
+            await client.end();
+          }
+          NODE
+      - name: Ejecutar migraciones sin archivo .env
+        run: node ./node_modules/node-pg-migrate/bin/node-pg-migrate up
+      - name: Crear datos de prueba
+        run: npm run seed
+      # La suite existente simula upload y elimina imágenes con public_id NULL.
+      - name: Tests backend
+        run: npm test
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+        shell: bash
+    env:
+      VITE_API_URL: http://localhost:3000/api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Lint frontend
+        run: npm run lint
+      - name: Build frontend
+        run: npm run build
