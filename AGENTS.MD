@@ -36,7 +36,25 @@ Cada paso se ejecuta dentro de la autorización de la tarea. Este flujo no autor
 
 ## Modos de trabajo
 
-Si un prompt no especifica modo, usar **ANALYZE** por defecto. Ningún modo autoriza automáticamente pasar al siguiente: cada transición requiere instrucción o aprobación explícita del developer. Completar una etapa o aprobar una validación no implica autorización para continuar.
+El trabajo se organiza en dos niveles. Si el developer indica **LIGHT** o **FULL**, respetar ese nivel. Si no indica modo, usar **LIGHT** solo cuando el riesgo sea claramente bajo; ante duda sobre seguridad, datos, contratos, arquitectura o regresiones, usar **FULL**. No convertir LIGHT en FULL sin explicar el motivo.
+
+Ningún nivel autoriza automáticamente commit o push. Las transiciones y operaciones de cierre requieren instrucción o aprobación explícita del developer.
+
+### LIGHT
+
+- Para cambios pequeños, localizados y de bajo riesgo.
+- Requiere análisis breve, implementación y solo las validaciones aplicables.
+- No requiere OpenSpec salvo que aparezca un riesgo o cambio de contrato.
+- Mantiene el control de scope, la protección de untracked y la revisión antes de commit.
+- Commit y push siguen requiriendo autorización explícita.
+
+### FULL
+
+- Para cambios de API, base de datos, seguridad, arquitectura, integraciones externas, features relevantes o riesgo importante de regresión.
+- Mantiene el flujo `ANALYZE → SPEC → IMPLEMENT → QA → COMMIT → ARCHIVE → PUSH`.
+- Cada etapa requiere la instrucción o aprobación correspondiente; completar una etapa no autoriza la siguiente.
+
+Los modos detallados `ANALYZE`, `SPEC`, `IMPLEMENT`, `COMMIT`, `ARCHIVE` y `PUSH` se usan dentro de FULL o cuando el developer los solicite explícitamente. Las reglas específicas de cada uno están debajo.
 
 Las conversaciones ChatGPT siguen siendo contexto auxiliar; el repositorio Git/GitHub, `docs/sdd`, OpenSpec y Jira continúan siendo las fuentes formales según sus responsabilidades.
 

@@ -49,7 +49,11 @@ El workflow indica el orden; no concede autorización automática para acciones 
 
 ## Modos de trabajo
 
-Si un prompt no especifica modo, usar **ANALYZE** por defecto. Ningún modo autoriza automáticamente pasar al siguiente: cada transición requiere instrucción o aprobación explícita del developer. Completar una etapa o aprobar una validación no implica autorización para continuar.
+El workflow tiene dos niveles. `LIGHT` cubre cambios pequeños, localizados y de bajo riesgo; `FULL` cubre cambios de API, base de datos, seguridad, arquitectura, integraciones externas, features relevantes o riesgo importante de regresión. Si el developer indica un nivel, respetarlo. Sin indicación, usar `LIGHT` solo cuando el riesgo sea claramente bajo; ante duda sobre seguridad, datos, contrato o arquitectura, usar `FULL` y explicar el motivo si el alcance cambia.
+
+`LIGHT` requiere análisis breve, implementación y validaciones aplicables. No requiere OpenSpec salvo que aparezca riesgo o cambio de contrato. `FULL` mantiene `ANALYZE → SPEC → IMPLEMENT → QA → COMMIT → ARCHIVE → PUSH`. Ningún nivel autoriza automáticamente commit o push; esas operaciones requieren autorización explícita. No repetir en cada tarea las reglas ya definidas en `AGENTS.MD`.
+
+Los modos detallados `ANALYZE`, `SPEC`, `IMPLEMENT`, `COMMIT`, `ARCHIVE` y `PUSH` se aplican dentro de `FULL` o cuando el developer los solicite explícitamente. Sus reglas operativas se mantienen en la sección siguiente.
 
 Las conversaciones ChatGPT siguen siendo contexto auxiliar; el repositorio Git/GitHub, `docs/sdd`, OpenSpec y Jira continúan siendo las fuentes formales según sus responsabilidades.
 

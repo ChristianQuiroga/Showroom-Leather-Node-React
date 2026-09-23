@@ -16,6 +16,14 @@ Aplica tanto a proyectos nuevos como a repositorios avanzados. Este documento ex
 - Un commit local no existe necesariamente en GitHub. Comprobar origin, upstream y ahead/behind; confirmar el push antes de afirmar publicación.
 - No declarar validaciones o aprobaciones sin evidencia. Una etapa no aplicable se justifica, no se presenta como ejecutada.
 
+## Niveles de trabajo
+
+Usar `LIGHT` para cambios pequeños, localizados y de bajo riesgo: análisis breve, implementación y validaciones aplicables. No requiere OpenSpec salvo que aparezca riesgo o cambio de contrato.
+
+Usar `FULL` para cambios de API, base de datos, seguridad, arquitectura, integraciones externas, features relevantes o riesgo importante de regresión. Mantiene `ANALYZE → SPEC → IMPLEMENT → QA → COMMIT → ARCHIVE → PUSH`.
+
+Si el developer indica `LIGHT` o `FULL`, respetarlo. Sin indicación, usar `LIGHT` solo cuando el riesgo sea claramente bajo; ante duda sobre seguridad, datos, contrato o arquitectura, usar `FULL` y explicar el motivo. Ningún nivel autoriza por sí solo commit o push; conservar el control de scope, la protección de untracked y la revisión previa al commit según `AGENTS.MD`.
+
 ## Roles
 
 | Rol | Responsabilidad |
