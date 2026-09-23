@@ -525,7 +525,7 @@ No quedan findings abiertos de esa lista. La estrategia avanzada de sesión se c
 - [ ] Categorías CRUD + reactivación.
 - [x] Imágenes CRUD + principal.
 - [x] Feedback de errores.
-- [ ] Sin divergencias UI/PostgreSQL/Cloudinary.
+- [x] Sin divergencias UI/PostgreSQL/Cloudinary.
 - [x] Tests backend pasan.
 - [ ] Smoke test final pasa.
 - [ ] Regression test final pasa.
@@ -541,10 +541,10 @@ Estado contrastado con `SDD-PROGRESS.md` y QA técnico del 2026-09-21; no se dec
 - Detalle y galería: QA mobile de SL-32, galería de SL-31 y acceso público validado en SL-36/SL-39; datos esperados documentados en esta spec y UC-03 de `08_Use_Cases.md`.
 - Login/logout y JWT: SL-33, SL-36 y SL-39, con pruebas de expiración, sesión inválida, 401 y 403.
 - Inactivos/reactivación: SL-34 y su QA de navegación y sincronización.
-- Imágenes CRUD/principal: regresión automatizada y QA manual aprobados en SL-39.
-- Feedback de errores: SL-33 valida 409 con error visible y sesión conservada; SL-34 conserva el listado ante errores. La consistencia global ante fallos sigue siendo un control separado.
-- Tests backend: 2 suites y 61/61 tests aprobados en SL-39 y en la validación de CI registrada.
-- QA técnico del 2026-09-21: 61/61 tests en PostgreSQL 18 temporal, frontend lint/build y git diff --check aprobados. La corrección de sincronización de categorías revisada entonces quedó publicada posteriormente en `0caa67d`; el registro de QA original no equivale a una validación manual posterior de ese commit.
+- Imágenes CRUD/principal: `close-mvp-image-consistency`, 71/71 tests backend, lint/build frontend y QA manual aprobada para upload/refetch, principal, eliminación, bloqueo de acciones, catálogo y detalle público.
+- Feedback de errores: SL-33 valida 409 con error visible y sesión conservada; SL-34 conserva el listado ante errores. `close-mvp-image-consistency` agrega HTTP 502 y mensajes explícitos para fallos parciales de imágenes.
+- Tests backend: **71/71 tests aprobados**; frontend `npm run lint` y `npm run build`: **OK**.
+- QA manual de imágenes aprobada: upload válido y refetch visible, mensaje de éxito, cambio de principal, una sola principal, delete de no principal, delete de principal con reasignación, bloqueo de acciones duplicadas, catálogo/detalle sin regresiones y consola sin errores/warnings.
 - Secretos protegidos: .env ignorados y no versionados, ejemplos sin secretos, configuración backend por entorno y sin credenciales en variables frontend. Búsqueda por coincidencia exacta de seis valores sensibles locales sin hallazgos en archivos versionados. Alcance: estado actual; no certifica historial Git, infraestructura externa ni rotación de credenciales. Respuesta 500 en NODE_ENV=production verificada sin stack ni mensaje interno.
 - README: completado con instalación, variables, base/unaccent, comandos, tests y estado real del MVP.
 
@@ -553,7 +553,7 @@ Estado contrastado con `SDD-PROGRESS.md` y QA técnico del 2026-09-21; no se dec
 - WhatsApp: UC-04 documenta el flujo, pero no hay una validación de apertura Web/app y mensaje registrada en SDD-PROGRESS.
 - Crear/editar productos: edición y refetch validados en SL-32/SL-34/SL-37/SL-38; falta evidencia explícita del flujo completo de alta desde UI. El criterio combinado permanece sin marcar.
 - Categorías CRUD + reactivación: comportamiento documentado en UC-09; falta registro de validación integral.
-- Sin divergencias UI/PostgreSQL/Cloudinary: hay sincronización y operaciones exitosas validadas, pero no evidencia global de consistencia ante fallos del proveedor o persistencia.
+- Sin divergencias UI/PostgreSQL/Cloudinary: cerrado mediante `close-mvp-image-consistency`, con cobertura automatizada y QA manual. No se reprodujo manualmente el fallo de refetch posterior a una mutación exitosa; queda como limitación de QA respaldada por implementación/tests, no como fallo.
 - Smoke test final y regression test final: las pruebas por work item no acreditan una ejecución final integral del MVP.
 - Jira refleja cierre o deuda diferida: hay cierres de work items confirmados, pero no constancia de revisión final del MVP y trazabilidad de toda la deuda diferida.
 
@@ -562,7 +562,7 @@ Estado contrastado con `SDD-PROGRESS.md` y QA técnico del 2026-09-21; no se dec
 - ProductForm conserva datos ante rechazo y limpia el alta solo tras éxito; categorías y gestores muestran errores y liberan estados de operación al completar/rechazar las promesas. No hay timeout explícito en apiClient: una solicitud que nunca finaliza puede mantener loading; no se certifica ausencia absoluta de bloqueos sin QA interactivo.
 - App.jsx solo registra en consola los errores de carga de categorías. La versión publicada refresca categorías al volver del gestor y filtra las inactivas en ProductForm; el flujo integral todavía requiere validación manual.
 - ProductForm recibe desde App.jsx solo categorías activas y el backend también rechaza categorías inactivas. La corrección está publicada en `0caa67d`; registrar el flujo de categorías en QA manual, sin asumir que el CRUD integral esté validado.
-- deleteProductImage elimina primero en Cloudinary y luego en PostgreSQL: si falla la segunda operación puede quedar una referencia rota. El rollback de upload intenta limpiar Cloudinary, pero puede fallar. La suite actual no cubre estas fallas; el criterio de consistencia permanece abierto.
+- `close-mvp-image-consistency` cambió delete a PostgreSQL-first, mantiene compensación de upload y registra fallos remotos. Persisten dos riesgos aceptados: cleanup fallido puede dejar un asset huérfano y destroy fallido después del commit PostgreSQL requiere reconciliación manual.
 
 ## 24. Flujo de trabajo SDD final
 

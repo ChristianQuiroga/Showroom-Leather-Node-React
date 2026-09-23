@@ -1,5 +1,36 @@
 # Showroom Leather — SDD Progress
 
+## Cierre técnico de consistencia de imágenes — 2026-09-23
+
+**Change:** `close-mvp-image-consistency`
+**Jira:** `SL-41` — "Cerrar consistencia de imágenes del MVP v1" — Done/Listo confirmado por el developer.
+**Estado:** implementación y QA manual aprobados; listo para commit y archive.
+
+### Evidencia automatizada
+
+- Backend `npm test`: **71/71 tests aprobados**.
+- Frontend `npm run lint`: **OK**.
+- Frontend `npm run build`: **OK**.
+- `git diff --check`: **OK**.
+- OpenSpec strict: **OK**.
+
+### QA manual aprobada
+
+- Upload de imagen válida y aparición posterior al refetch.
+- Mensaje `Imagen subida correctamente`.
+- Cambio de imagen principal con una sola principal visible.
+- Eliminación de imagen no principal.
+- Eliminación de imagen principal con reasignación correcta.
+- Botones de mutación bloqueados durante operaciones y protección observable contra clicks duplicados.
+- Catálogo público y detalle con galería sin regresiones.
+- Consola del navegador sin errores ni warnings.
+
+### Limitación y riesgos residuales
+
+- No se reprodujo manualmente el fallo de refetch posterior a una mutación exitosa. El comportamiento queda respaldado por la implementación y los tests; se registra como limitación de QA manual, no como fallo.
+- Un cleanup fallido puede dejar un asset huérfano.
+- Un destroy fallido después del commit PostgreSQL requiere reconciliación manual.
+
 ## QA técnico final MVP v1 — 2026-09-21
 
 **Resultado:** verificación técnica aprobada con pendientes manuales y hallazgos documentados; no se declara cierre integral del MVP. Se revisaron la spec, los casos de uso, los registros SL-30 a SL-39 y el código actual. La revisión se realizó sobre una copia local anterior; el estado actual de `main` está publicado en `0caa67d`. La corrección de sincronización de categorías de `frontend/src/App.jsx` quedó publicada en ese commit. `FRONTEND-UI-CONTEXT.md` permanece untracked e intacto.
@@ -21,7 +52,7 @@
 | Login/logout, sesión y JWT | auth.service usa bcrypt.compare, firma JWT con expiración; auth.middleware verifica firma y rol; App valida /auth/me, limpia 401/403, conserva token en otros errores y cierra por exp. Suite auth y QA SL-33. Revocación avanzada sigue diferida. |
 | Crear/editar productos | ProductForm, servicios y tests POST/PUT revisados; datos conservados en error y limpieza del alta tras éxito. Edición con datos del listado admin, coherente con SL-36. Falta QA manual integral del alta. |
 | Categorías | CategoryManager, categoryService y rutas/service/repository soportan CRUD, activar/desactivar, 400/404/409 y JWT admin. No existe suite de categorías ni evidencia nueva de QA manual: permanece pendiente. |
-| Imágenes | ProductImageManager y servicios: lectura admin separada, upload/main/delete; suite verifica recorrido exitoso con upload simulado y delete sin public_id. No cubre errores del proveedor ni compensaciones fallidas. |
+| Imágenes | `close-mvp-image-consistency`: upload con compensación, delete PostgreSQL-first, destroy posterior, `setAsMain` transaccional, 71 tests y QA manual aprobada. La limitación de no reproducir manualmente el fallo de refetch queda registrada; los riesgos residuales de cleanup/destroy requieren reconciliación manual. |
 | Actividad y visibilidad | Suite products verifica desactivación/reactivación, 401/403/404/409 y activo/publicado; reactivar no publica. |
 | Navegación admin | App conserva estado de ProductManager, callbacks de regreso y refresco; respaldo manual SL-34/SL-38. El nuevo refresco local de categorías no tiene QA manual en esta sesión. |
 
@@ -38,14 +69,14 @@
 - La carga de categorías en App.jsx informa errores solo por consola. La versión publicada refresca categorías al regresar del gestor y filtra las inactivas en ProductForm; el flujo integral todavía requiere validación manual.
 - ProductForm recibe solo categorías activas desde App.jsx; el backend también rechaza categorías inactivas. La corrección está publicada en `0caa67d`, pero el flujo integral de categorías todavía requiere validación manual.
 - Los handlers con loading lo liberan en finally o tras resolver/rechazar la carga; apiClient no define timeout. No se garantiza liberación ante peticiones indefinidamente pendientes.
-- Riesgo de divergencia confirmado por análisis: deleteProductImage elimina el recurso remoto antes del registro PostgreSQL. Si falla PostgreSQL puede quedar referencia rota; también puede fallar la compensación de un upload. No se reprodujo contra proveedor real ni existe cobertura de esas fallas. Requiere validación/corrección o decisión explícita antes de cerrar ese DoD.
+- El cambio `close-mvp-image-consistency` corrigió el orden delete PostgreSQL-first, agregó compensación y cobertura de fallos parciales. Un cleanup fallido puede dejar un asset huérfano y un destroy fallido posterior al commit PostgreSQL requiere reconciliación manual. El fallo de refetch posterior a una mutación exitosa no se reprodujo manualmente, pero está respaldado por implementación y tests.
 - No se detectaron fallos en los comandos ejecutados. Lo anterior no es una aprobación de smoke/regresión manual integral.
 
 ### Documentación y DoD
 
 README completado con objetivo, stack, estructura, requisitos, instalación, variables sin secretos, migraciones/unaccent, seed, comandos, tests y estado del MVP. Spec corregida para reflejar la precarga administrativa actual y distinguir evidencia técnica/manual.
 
-Se cierran README y protección de secretos con el alcance indicado: **14/21 puntos DoD completos**. Permanecen abiertos WhatsApp, crear/editar (alta UI), categorías CRUD/reactivación, consistencia UI/PostgreSQL/Cloudinary, smoke final, regresión final y revisión global de cierre/deuda en Jira. En esta sesión de QA no se actualizaron Jira ni OpenSpec; el registro se realizó antes de los commits posteriores de documentación y de `App.jsx`.
+Se cierran README, protección de secretos y consistencia UI/PostgreSQL/Cloudinary con el alcance indicado: **15/21 puntos DoD completos**. Permanecen abiertos WhatsApp, crear/editar (alta UI), categorías CRUD/reactivación, smoke final, regresión final y revisión global de cierre/deuda en Jira.
 
 ## Fase actual
 

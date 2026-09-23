@@ -132,8 +132,11 @@ export const addProductImage = async (
         await deleteCloudinaryImage(cloudinaryResult.public_id);
       } catch (cleanupError) {
         console.error(
-          "No se pudo limpiar la imagen de Cloudinary:",
-          cleanupError.message,
+          `No se pudo limpiar la imagen de Cloudinary. public_id=${cloudinaryResult.public_id}`,
+          {
+            originalError: error.message,
+            cleanupError: cleanupError.message,
+          },
         );
       }
     }
@@ -158,7 +161,13 @@ export const setProductMainImage = async (productId, imageId) => {
     throw new AppError("La imagen ya es la principal", 409);
   }
 
-  return productImageRepository.setAsMain(productId, imageId);
+  const updatedImage = await productImageRepository.setAsMain(productId, imageId);
+
+  if (!updatedImage) {
+    throw new AppError("La imagen no existe o no pertenece al producto", 404);
+  }
+
+  return updatedImage;
 };
 
 export const deleteProductImage = async (productId, imageId) => {
@@ -173,20 +182,41 @@ export const deleteProductImage = async (productId, imageId) => {
     throw new AppError("La imagen no existe o no pertenece al producto", 404);
   }
 
-  if (image.public_id) {
-    await deleteCloudinaryImage(image.public_id);
-  }
+  let deletedImage;
 
   try {
-    return await productImageRepository.remove(productId, imageId);
+    deletedImage = await productImageRepository.remove(productId, imageId);
   } catch (error) {
     console.error(
-      `La imagen fue eliminada de Cloudinary pero no pudo eliminarse de PostgreSQL. imageId=${imageId}`,
+      `No se pudo eliminar la imagen de PostgreSQL. imageId=${imageId}`,
+      error.message,
     );
 
     throw new AppError(
-      "La imagen fue eliminada del almacenamiento, pero ocurrió un error al actualizar la base de datos",
+      "Ocurrió un error al actualizar la base de datos",
       500,
     );
   }
+
+  if (!deletedImage) {
+    throw new AppError("La imagen no existe o no pertenece al producto", 404);
+  }
+
+  if (image.public_id) {
+    try {
+      await deleteCloudinaryImage(image.public_id);
+    } catch (error) {
+      console.error(
+        `La imagen fue eliminada de PostgreSQL, pero no pudo eliminarse de Cloudinary. public_id=${image.public_id}`,
+        error.message,
+      );
+
+      throw new AppError(
+        "La imagen se eliminó de la base de datos, pero no pudo eliminarse del almacenamiento",
+        502,
+      );
+    }
+  }
+
+  return deletedImage;
 };

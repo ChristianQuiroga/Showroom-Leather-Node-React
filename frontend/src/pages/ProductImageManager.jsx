@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   getAdminProductImages,
@@ -19,7 +19,8 @@ function ProductImageManager({
   const [altText, setAltText] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const mutationInFlightRef = useRef(false);
 
   const loadImages = async () => {
     try {
@@ -29,7 +30,23 @@ function ProductImageManager({
     } catch (error) {
       onAuthError?.(error);
       setError(error.message);
+      throw error;
     }
+  };
+
+  const beginMutation = (action) => {
+    if (mutationInFlightRef.current) {
+      return false;
+    }
+
+    mutationInFlightRef.current = true;
+    setPendingAction(action);
+    return true;
+  };
+
+  const endMutation = () => {
+    mutationInFlightRef.current = false;
+    setPendingAction(null);
   };
 
   useEffect(() => {
@@ -66,8 +83,13 @@ function ProductImageManager({
       return;
     }
 
+    let mutationSucceeded = false;
+
+    if (!beginMutation("upload")) {
+      return;
+    }
+
     try {
-      setLoading(true);
       setMessage("");
       setError("");
 
@@ -79,61 +101,95 @@ function ProductImageManager({
         },
         token,
       );
+      mutationSucceeded = true;
 
       setFile(null);
       setAltText("");
-      setMessage("Imagen subida correctamente");
-
       await loadImages();
+
+      setMessage("Imagen subida correctamente");
 
       if (onSaved) {
         onSaved();
       }
     } catch (error) {
       onAuthError?.(error);
-      setError(error.message);
+      if (mutationSucceeded) {
+        setMessage("La operación se realizó, pero no se pudo actualizar la vista");
+        setError("");
+      } else {
+        setError(error.message);
+      }
     } finally {
-      setLoading(false);
+      endMutation();
     }
   };
 
   const handleSetMain = async (imageId) => {
+    if (!beginMutation("set-main")) {
+      return;
+    }
+
+    let mutationSucceeded = false;
+
     try {
       setMessage("");
       setError("");
 
       await setMainProductImage(productId, imageId, token);
-
-      setMessage("Imagen principal actualizada");
+      mutationSucceeded = true;
 
       await loadImages();
+
+      setMessage("Imagen principal actualizada");
 
       if (onSaved) {
         onSaved();
       }
     } catch (error) {
       onAuthError?.(error);
-      setError(error.message);
+      if (mutationSucceeded) {
+        setMessage("La operación se realizó, pero no se pudo actualizar la vista");
+        setError("");
+      } else {
+        setError(error.message);
+      }
+    } finally {
+      endMutation();
     }
   };
 
   const handleDelete = async (imageId) => {
+    if (!beginMutation("delete")) {
+      return;
+    }
+
+    let mutationSucceeded = false;
+
     try {
       setMessage("");
       setError("");
 
       await deleteProductImage(productId, imageId, token);
-
-      setMessage("Imagen eliminada correctamente");
+      mutationSucceeded = true;
 
       await loadImages();
+
+      setMessage("Imagen eliminada correctamente");
 
       if (onSaved) {
         onSaved();
       }
     } catch (error) {
       onAuthError?.(error);
-      setError(error.message);
+      if (mutationSucceeded) {
+        setMessage("La operación se realizó, pero no se pudo actualizar la vista");
+        setError("");
+      } else {
+        setError(error.message);
+      }
+    } finally {
+      endMutation();
     }
   };
 
@@ -167,8 +223,8 @@ function ProductImageManager({
             />
           </label>
 
-          <button type="submit" disabled={loading || !file}>
-            {loading ? "Subiendo..." : "Subir imagen"}
+          <button type="submit" disabled={pendingAction !== null || !file}>
+            {pendingAction === "upload" ? "Subiendo..." : "Subir imagen"}
           </button>
         </form>
 
@@ -203,13 +259,20 @@ function ProductImageManager({
                     <button
                       type="button"
                       onClick={() => handleSetMain(image.id)}
+                      disabled={pendingAction !== null}
                     >
-                      Marcar como principal
+                      {pendingAction === "set-main"
+                        ? "Actualizando..."
+                        : "Marcar como principal"}
                     </button>
                   )}
 
-                  <button type="button" onClick={() => handleDelete(image.id)}>
-                    Eliminar
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(image.id)}
+                    disabled={pendingAction !== null}
+                  >
+                    {pendingAction === "delete" ? "Eliminando..." : "Eliminar"}
                   </button>
                 </div>
               </article>

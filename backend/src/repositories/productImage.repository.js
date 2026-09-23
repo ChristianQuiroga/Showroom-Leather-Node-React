@@ -150,6 +150,10 @@ export const setAsMain = async (productId, imageId) => {
       [imageId, productId],
     );
 
+    if (result.rowCount === 0) {
+      throw new Error("La imagen principal no existe o no pertenece al producto");
+    }
+
     await client.query("COMMIT");
 
     return result.rows[0] ?? null;
