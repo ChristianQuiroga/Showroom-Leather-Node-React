@@ -1,7 +1,7 @@
 # Showroom Leather — MVP v1 Finalization Spec
 
 **Proyecto:** Showroom-Leather-Node-React  
-**Estado:** Draft para fase final SDD  
+**Estado:** QA técnico aprobado parcialmente; cierre manual del MVP pendiente
 **Objetivo:** cerrar y estabilizar el MVP v1 mediante Spec-Driven Development (SDD).
 
 ## 1. Propósito
@@ -51,7 +51,7 @@ En esta fase adoptamos **Spec-Driven Development**:
 - Paginación.
 - Detalle de producto.
 - Consulta por WhatsApp.
-- Galería pública de imágenes como pendiente de cierre.
+- Galería pública de imágenes, resuelta en SL-31.
 
 ### Administración
 - Login admin con JWT.
@@ -61,7 +61,7 @@ En esta fase adoptamos **Spec-Driven Development**:
 - Gestión de categorías.
 - Gestión de imágenes.
 - Operaciones protegidas por JWT y rol admin.
-- Gestión de productos inactivos como pendiente de cierre.
+- Gestión de productos inactivos y reactivación, resuelta en SL-34.
 
 ### Infraestructura
 - Backend Node.js + Express.
@@ -169,8 +169,15 @@ La publicación no es un estado comercial: `is_published` es la única fuente de
   - volver a page 1;
   - hacer refetch.
 
-### Gap
-Pendiente: acción **Limpiar filtros**.
+### Estado
+
+Resuelto en **SL-30**.
+
+La acción **Limpiar filtros**:
+- vacía búsqueda;
+- restablece estado y categoría;
+- vuelve a `page = 1`;
+- provoca el refetch correspondiente.
 
 ## 8. Paginación
 
@@ -216,8 +223,8 @@ Acceptance Criteria:
 - funciona con una sola imagen;
 - placeholder sin imágenes.
 
-### Gap
-Pendiente: galería pública.
+### Estado
+Resuelto en **SL-31**, con pruebas manuales de múltiples imágenes, selección de miniaturas, una sola imagen, placeholder y responsive registradas en `SDD-PROGRESS.md`.
 
 ## 10. WhatsApp
 
@@ -247,13 +254,13 @@ Pendiente: galería pública.
 - token inválido/expirado → 401;
 - no-admin → 403.
 
-### Gap / decisión
-Revisar política de persistencia:
-- `localStorage`;
-- `sessionStorage`;
-- estrategia más robusta futura.
+### Decisión de cierre
+Decisión cerrada en **SL-33**: se mantiene `localStorage` para MVP v1.
 
-Para MVP v1 puede mantenerse `localStorage` si queda documentado y el JWT expira.
+- Validación inicial mediante `GET /api/auth/me` antes de habilitar administración.
+- `401` y `403` eliminan la sesión; los demás errores y los errores de red no eliminan el token.
+- Cierre local basado en `exp`; login + F5, token inválido/expirado y logout validados.
+- Cookies `httpOnly`, refresh tokens y revocación de sesiones quedan como deuda futura.
 
 ## 12. Productos — administración
 
@@ -278,7 +285,7 @@ Para MVP v1 puede mantenerse `localStorage` si queda documentado y el JWT expira
 
 ### Editar
 - solo admin;
-- precarga por `GET /products/:id`;
+- precarga con el producto seleccionado del listado administrativo `GET /api/products/admin`, según la corrección documentada en SL-36;
 - botón Guardar deshabilitado sin cambios;
 - campos cambiados resaltados;
 - PUT protegido;
@@ -297,8 +304,8 @@ Acceptance Criteria:
 - Inactivo → Activo;
 - refetch posterior.
 
-### Gap
-Pendiente: administración/reactivación de productos inactivos.
+### Estado
+Resuelto en **SL-34**: listado administrativo, desactivación/reactivación, refetch y conservación de filtros/página validados. Reactivar establece `is_active = true` sin republicar automáticamente; la publicación posterior requiere una acción explícita desde Editar.
 
 ## 13. Categorías — administración
 
@@ -388,8 +395,8 @@ Formularios:
 - desktop: 2 columnas cuando corresponda;
 - mobile: 1 columna.
 
-### Gap
-Validación en dispositivo móvil real pendiente por acceso local/red/CORS.
+### Estado
+Resuelto en **SL-32**: catálogo, filtros, detalle, galería, login/logout y gestión administrativa validados en un dispositivo móvil real, sin scroll horizontal no deseado y con controles táctiles accesibles. Los ajustes temporales de IP/CORS para QA no constituyen la configuración definitiva de producción.
 
 ## 17. Testing
 
@@ -457,8 +464,8 @@ Antes de cerrar:
 - rutas admin protegidas;
 - CORS limitado;
 - no stack trace en producción;
-- revisar persistencia JWT;
-- verificar expiración.
+- persistencia JWT: decisión cerrada en SL-33, localStorage para MVP v1;
+- expiración y limpieza de sesión: validadas en SL-33.
 
 ## 20. Performance
 
@@ -472,11 +479,9 @@ Antes de cerrar:
 
 ## 21. Findings abiertos
 
-1. Limpiar filtros.
-2. Galería pública.
-3. Validación mobile real.
-4. Persistencia de sesión.
-5. Productos inactivos/reactivación.
+Los cinco asuntos originalmente listados están cerrados según `SDD-PROGRESS.md`: Limpiar filtros (SL-30), galería pública (SL-31), validación mobile real (SL-32), decisión de persistencia de sesión (SL-33) y productos inactivos/reactivación (SL-34).
+
+No quedan findings abiertos de esa lista. La estrategia avanzada de sesión se conserva como deuda futura; los controles de cierre aún sin evidencia se indican en la Definition of Done.
 
 ## 22. Prioridades
 
@@ -491,43 +496,73 @@ Antes de cerrar:
 - tests backend verdes.
 
 ### P1 — Debe resolverse para MVP v1
-- limpiar filtros;
-- galería pública;
-- productos inactivos/reactivación;
+- limpiar filtros: resuelto en SL-30;
+- galería pública: resuelta en SL-31;
+- productos inactivos/reactivación: resuelto en SL-34;
 - regresión final;
 - seguridad;
 - limit final.
 
 ### P2 — Puede quedar como deuda controlada
-- mobile físico si la red local no se resuelve;
-- estrategia avanzada de sesión;
+- estrategia avanzada de sesión: deuda futura acordada en SL-33;
 - React Router;
 - tests frontend completos;
 - refactor amplio.
 
 ## 23. Definition of Done — MVP v1
 
-- [ ] Catálogo público funciona sin login.
-- [ ] Búsqueda y filtros funcionan.
-- [ ] Existe Limpiar filtros.
-- [ ] Paginación funciona.
-- [ ] Detalle completo.
-- [ ] Galería pública.
+- [x] Catálogo público funciona sin login.
+- [x] Búsqueda y filtros funcionan.
+- [x] Existe Limpiar filtros.
+- [x] Paginación funciona.
+- [x] Detalle completo.
+- [x] Galería pública.
 - [ ] WhatsApp funciona.
-- [ ] Login/logout funcionan.
-- [ ] JWT protege admin.
+- [x] Login/logout funcionan.
+- [x] JWT protege admin.
 - [ ] Crear/editar productos.
-- [ ] Admin ve/reactiva inactivos.
+- [x] Admin ve/reactiva inactivos.
 - [ ] Categorías CRUD + reactivación.
-- [ ] Imágenes CRUD + principal.
-- [ ] Feedback de errores.
+- [x] Imágenes CRUD + principal.
+- [x] Feedback de errores.
 - [ ] Sin divergencias UI/PostgreSQL/Cloudinary.
-- [ ] Tests backend pasan.
+- [x] Tests backend pasan.
 - [ ] Smoke test final pasa.
 - [ ] Regression test final pasa.
-- [ ] Secretos protegidos.
-- [ ] README actualizado.
+- [x] Secretos protegidos.
+- [x] README actualizado.
 - [ ] Jira refleja cierre o deuda diferida.
+
+### Evidencia de cumplimiento
+
+Estado contrastado con `SDD-PROGRESS.md` y QA técnico del 2026-09-21; no se declara cerrado el MVP completo ni se sustituye QA manual por análisis de código.
+
+- Catálogo sin login, búsqueda/filtros y paginación: SL-30, SL-34 y Validación manual — navegación, paginación y sesión.
+- Detalle y galería: QA mobile de SL-32, galería de SL-31 y acceso público validado en SL-36/SL-39; datos esperados documentados en esta spec y UC-03 de `08_Use_Cases.md`.
+- Login/logout y JWT: SL-33, SL-36 y SL-39, con pruebas de expiración, sesión inválida, 401 y 403.
+- Inactivos/reactivación: SL-34 y su QA de navegación y sincronización.
+- Imágenes CRUD/principal: regresión automatizada y QA manual aprobados en SL-39.
+- Feedback de errores: SL-33 valida 409 con error visible y sesión conservada; SL-34 conserva el listado ante errores. La consistencia global ante fallos sigue siendo un control separado.
+- Tests backend: 2 suites y 61/61 tests aprobados en SL-39 y en la validación de CI registrada.
+- QA técnico del 2026-09-21: 61/61 tests en PostgreSQL 18 temporal, frontend lint/build y git diff --check aprobados. La corrección de sincronización de categorías revisada entonces quedó publicada posteriormente en `0caa67d`; el registro de QA original no equivale a una validación manual posterior de ese commit.
+- Secretos protegidos: .env ignorados y no versionados, ejemplos sin secretos, configuración backend por entorno y sin credenciales en variables frontend. Búsqueda por coincidencia exacta de seis valores sensibles locales sin hallazgos en archivos versionados. Alcance: estado actual; no certifica historial Git, infraestructura externa ni rotación de credenciales. Respuesta 500 en NODE_ENV=production verificada sin stack ni mensaje interno.
+- README: completado con instalación, variables, base/unaccent, comandos, tests y estado real del MVP.
+
+### Pendientes de evidencia o cierre
+
+- WhatsApp: UC-04 documenta el flujo, pero no hay una validación de apertura Web/app y mensaje registrada en SDD-PROGRESS.
+- Crear/editar productos: edición y refetch validados en SL-32/SL-34/SL-37/SL-38; falta evidencia explícita del flujo completo de alta desde UI. El criterio combinado permanece sin marcar.
+- Categorías CRUD + reactivación: comportamiento documentado en UC-09; falta registro de validación integral.
+- Sin divergencias UI/PostgreSQL/Cloudinary: hay sincronización y operaciones exitosas validadas, pero no evidencia global de consistencia ante fallos del proveedor o persistencia.
+- Smoke test final y regression test final: las pruebas por work item no acreditan una ejecución final integral del MVP.
+- Jira refleja cierre o deuda diferida: hay cierres de work items confirmados, pero no constancia de revisión final del MVP y trazabilidad de toda la deuda diferida.
+
+### Límites y hallazgos del QA técnico final
+
+- ProductForm conserva datos ante rechazo y limpia el alta solo tras éxito; categorías y gestores muestran errores y liberan estados de operación al completar/rechazar las promesas. No hay timeout explícito en apiClient: una solicitud que nunca finaliza puede mantener loading; no se certifica ausencia absoluta de bloqueos sin QA interactivo.
+- App.jsx solo registra en consola los errores de carga de categorías. La versión publicada refresca categorías al volver del gestor y filtra las inactivas en ProductForm; el flujo integral todavía requiere validación manual.
+- ProductForm recibe desde App.jsx solo categorías activas y el backend también rechaza categorías inactivas. La corrección está publicada en `0caa67d`; registrar el flujo de categorías en QA manual, sin asumir que el CRUD integral esté validado.
+- deleteProductImage elimina primero en Cloudinary y luego en PostgreSQL: si falla la segunda operación puede quedar una referencia rota. El rollback de upload intenta limpiar Cloudinary, pero puede fallar. La suite actual no cubre estas fallas; el criterio de consistencia permanece abierto.
 
 ## 24. Flujo de trabajo SDD final
 
@@ -560,11 +595,11 @@ Commit pequeño, descriptivo y coherente.
 
 ## 25. Orden recomendado
 
-1. Limpiar filtros.
-2. Galería pública.
-3. Productos inactivos/reactivación.
-4. Resolver/documentar mobile.
-5. Revisar persistencia JWT.
+1. Limpiar filtros — completado en SL-30.
+2. Galería pública — completado en SL-31.
+3. Productos inactivos/reactivación — completado en SL-34.
+4. Validación mobile real — completado en SL-32.
+5. Persistencia JWT — decisión cerrada en SL-33; estrategia avanzada diferida.
 6. Refactor frontend mínimo.
 7. Refactor backend mínimo.
 8. Tests prioritarios.

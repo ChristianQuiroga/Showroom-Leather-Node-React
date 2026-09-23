@@ -1,5 +1,52 @@
 # Showroom Leather — SDD Progress
 
+## QA técnico final MVP v1 — 2026-09-21
+
+**Resultado:** verificación técnica aprobada con pendientes manuales y hallazgos documentados; no se declara cierre integral del MVP. Se revisaron la spec, los casos de uso, los registros SL-30 a SL-39 y el código actual. La revisión se realizó sobre una copia local anterior; el estado actual de `main` está publicado en `0caa67d`. La corrección de sincronización de categorías de `frontend/src/App.jsx` quedó publicada en ese commit. `FRONTEND-UI-CONTEXT.md` permanece untracked e intacto.
+
+### Pruebas ejecutadas
+
+- Backend `npm test`: 2 suites, 61/61 tests aprobados con Node 24 y PostgreSQL 18.3 temporal en puerto 55439. Base vacía, unaccent, cinco migraciones y seed de prueba; variables ficticias y carga de .env real deshabilitada. No se utilizó la base de desarrollo. Instancia temporal detenida al finalizar.
+- Frontend `npm run lint` y `npm run build`: aprobados sobre el working tree, incluida la modificación local previa de App.jsx. No acredita QA manual ni validación exclusiva del HEAD publicado.
+- Comprobación directa de errorHandler con NODE_ENV=production: error inesperado devuelve 500 genérico sin stack ni detalle interno.
+- `git diff --check`: aprobado. No se cambiaron dependencias ni lockfiles.
+
+### Revisión de flujos y evidencia
+
+| Flujo | Evidencia y límite |
+| --- | --- |
+| Catálogo, búsqueda, filtros, paginación | App.jsx y product.repository/service: búsqueda parametrizada con unaccent/ILIKE, filtros combinados, paginación y corrección de página; suite products y QA previo SL-30/SL-34. Límite backend 1–50, default 12; frontend solicita 4. |
+| Detalle y galería | ProductDetail usa Promise.allSettled, muestra fallo de galería sin perder detalle, principal/miniaturas; suite products y QA SL-31/SL-36/SL-39. |
+| WhatsApp | utils/whatsapp genera wa.me con mensaje codificado; ProductDetail consume whatsappUrl. No hay test dedicado ni nueva apertura real de Web/app: pendiente manual. |
+| Login/logout, sesión y JWT | auth.service usa bcrypt.compare, firma JWT con expiración; auth.middleware verifica firma y rol; App valida /auth/me, limpia 401/403, conserva token en otros errores y cierra por exp. Suite auth y QA SL-33. Revocación avanzada sigue diferida. |
+| Crear/editar productos | ProductForm, servicios y tests POST/PUT revisados; datos conservados en error y limpieza del alta tras éxito. Edición con datos del listado admin, coherente con SL-36. Falta QA manual integral del alta. |
+| Categorías | CategoryManager, categoryService y rutas/service/repository soportan CRUD, activar/desactivar, 400/404/409 y JWT admin. No existe suite de categorías ni evidencia nueva de QA manual: permanece pendiente. |
+| Imágenes | ProductImageManager y servicios: lectura admin separada, upload/main/delete; suite verifica recorrido exitoso con upload simulado y delete sin public_id. No cubre errores del proveedor ni compensaciones fallidas. |
+| Actividad y visibilidad | Suite products verifica desactivación/reactivación, 401/403/404/409 y activo/publicado; reactivar no publica. |
+| Navegación admin | App conserva estado de ProductManager, callbacks de regreso y refresco; respaldo manual SL-34/SL-38. El nuevo refresco local de categorías no tiene QA manual en esta sesión. |
+
+### Seguridad mínima
+
+- .env de backend/frontend ignorados y no versionados; .env.example sin secretos reales. JWT_SECRET y Cloudinary provienen del entorno backend; frontend solo configura una URL pública.
+- Búsqueda exacta de JWT_SECRET, CLOUDINARY_API_KEY/API_SECRET, DATABASE_URL, SEED_ADMIN_PASSWORD y TEST_ADMIN_PASSWORD locales en archivos versionados: sin coincidencias; valores no impresos. Revisión del estado actual, no auditoría del historial ni de secretos externos.
+- bcrypt con costo 12 al crear admin/seed; comparación con bcrypt al login. Mutaciones de productos, categorías e imágenes y lecturas admin protegidas por authenticate/authorizeAdmin.
+- CORS configurable mediante CORS_ORIGINS; producción no incluye stack en errores. No se comprobó una configuración desplegada de producción.
+- No se realizaron operaciones reales contra Cloudinary; mocks y recorridos existentes conservados.
+
+### Hallazgos y límites
+
+- La carga de categorías en App.jsx informa errores solo por consola. La versión publicada refresca categorías al regresar del gestor y filtra las inactivas en ProductForm; el flujo integral todavía requiere validación manual.
+- ProductForm recibe solo categorías activas desde App.jsx; el backend también rechaza categorías inactivas. La corrección está publicada en `0caa67d`, pero el flujo integral de categorías todavía requiere validación manual.
+- Los handlers con loading lo liberan en finally o tras resolver/rechazar la carga; apiClient no define timeout. No se garantiza liberación ante peticiones indefinidamente pendientes.
+- Riesgo de divergencia confirmado por análisis: deleteProductImage elimina el recurso remoto antes del registro PostgreSQL. Si falla PostgreSQL puede quedar referencia rota; también puede fallar la compensación de un upload. No se reprodujo contra proveedor real ni existe cobertura de esas fallas. Requiere validación/corrección o decisión explícita antes de cerrar ese DoD.
+- No se detectaron fallos en los comandos ejecutados. Lo anterior no es una aprobación de smoke/regresión manual integral.
+
+### Documentación y DoD
+
+README completado con objetivo, stack, estructura, requisitos, instalación, variables sin secretos, migraciones/unaccent, seed, comandos, tests y estado del MVP. Spec corregida para reflejar la precarga administrativa actual y distinguir evidencia técnica/manual.
+
+Se cierran README y protección de secretos con el alcance indicado: **14/21 puntos DoD completos**. Permanecen abiertos WhatsApp, crear/editar (alta UI), categorías CRUD/reactivación, consistencia UI/PostgreSQL/Cloudinary, smoke final, regresión final y revisión global de cierre/deuda en Jira. En esta sesión de QA no se actualizaron Jira ni OpenSpec; el registro se realizó antes de los commits posteriores de documentación y de `App.jsx`.
+
 ## Fase actual
 
 MVP v1 — Revisión, estabilización y QA final
