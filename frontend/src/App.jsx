@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import ProductCard from "./components/ProductCard.jsx";
 import ProductDetail from "./components/ProductDetail.jsx";
@@ -27,6 +27,7 @@ const createInitialProductManagerState = () => ({
 });
 
 function App() {
+  const isMountedRef = useRef(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -52,6 +53,14 @@ function App() {
   );
   const [imageProductId, setImageProductId] = useState(null);
   const hasActiveFilters = Boolean(search || status || categoryId);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const resetProductManagerState = useCallback(() => {
     setProductManagerState(createInitialProductManagerState());
@@ -202,18 +211,41 @@ function App() {
 
   // Load categories on component mount
   useEffect(() => {
-    const loadCategories = async () => {
+    let ignore = false;
+
+    const loadInitialCategories = async () => {
       try {
         const response = await getCategories();
 
-        setCategories(response.data);
+        if (!ignore) {
+          setCategories(response.data);
+        }
       } catch (error) {
-        console.error(error);
+        if (!ignore) {
+          console.error(error);
+        }
       }
     };
 
-    loadCategories();
+    loadInitialCategories();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
+
+  // Refresh categories after returning from the category manager
+  const refreshCategories = async () => {
+    try {
+      const response = await getCategories();
+
+      if (isMountedRef.current) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (sessionLoading) {
     return (
@@ -257,7 +289,7 @@ function App() {
       <ProductForm
         token={token}
         onAuthError={handleAdminError}
-        categories={categories}
+        categories={categories.filter((category) => category.is_active)}
         product={editingProduct}
         onSaved={() => setRefreshProducts((prev) => prev + 1)}
         onBack={() => {
@@ -273,7 +305,10 @@ function App() {
       <CategoryManager
         token={token}
         onAuthError={handleAdminError}
-        onBack={() => setShowCategoryManager(false)}
+        onBack={async () => {
+          await refreshCategories();
+          setShowCategoryManager(false);
+        }}
       />
     );
   }
