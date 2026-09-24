@@ -1,6 +1,33 @@
-# Showroom Leather
+# 🛍️ Showroom Leather
 
-Catálogo público de productos de cuero con búsqueda, filtros, paginación, detalle, galería y consulta por WhatsApp. La administración permite gestionar productos, categorías, imágenes y publicación mediante JWT y rol admin. No incluye carrito, pagos ni checkout.
+Aplicación Full Stack para publicar y administrar un catálogo de productos de cuero.
+
+Permite a los usuarios explorar productos, aplicar filtros, consultar detalles e imágenes y contactar directamente por WhatsApp.
+
+El área administrativa permite gestionar productos, categorías, imágenes y estado de publicación mediante autenticación JWT y rol administrador.
+
+> Proyecto desarrollado como MVP funcional, con foco en arquitectura, buenas prácticas, testing y evolución incremental.
+
+## ✨ Funcionalidades principales
+
+### Catálogo público
+
+- Listado de productos
+- Búsqueda y filtros
+- Paginación
+- Detalle de producto
+- Galería de imágenes
+- Consulta directa por WhatsApp
+
+### Administración
+
+- Login de administrador
+- Autenticación con JWT
+- Gestión de productos
+- Gestión de categorías
+- Gestión de imágenes
+- Publicación y despublicación
+- Control de acceso por rol admin
 
 ## Stack y estructura
 
@@ -12,6 +39,21 @@ Catálogo público de productos de cuero con búsqueda, filtros, paginación, de
 - `frontend/src`: componentes, páginas y servicios HTTP.
 - `docs/sdd`: especificación, estado y workflow del proyecto.
 - `openspec`: contratos de cambios y archivo; `scripts`: verificaciones SDD.
+
+## 🧱 Arquitectura
+
+El backend está organizado por capas para separar responsabilidades:
+
+```text
+Routes
+  ↓
+Controllers
+  ↓
+Services
+  ↓
+Repositories
+  ↓
+PostgreSQL
 
 ## Requisitos
 
