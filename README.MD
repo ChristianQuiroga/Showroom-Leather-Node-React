@@ -29,7 +29,7 @@ El área administrativa permite gestionar productos, categorías, imágenes y es
 - Publicación y despublicación
 - Control de acceso por rol admin
 
-## Stack y estructura
+## 🛠️ Stack y estructura
 
 - Backend: Node.js (ESM), Express, PostgreSQL, JWT, bcrypt y Cloudinary.
 - Frontend: React y Vite; ESLint para verificación estática.
@@ -54,6 +54,11 @@ Services
 Repositories
   ↓
 PostgreSQL
+```
+
+Además, el proyecto utiliza middlewares para autenticación, autorización, validaciones y manejo centralizado de errores.
+
+La gestión de imágenes se integra con Cloudinary y el frontend consume la REST API desarrollada con Node.js y Express.
 
 ## Requisitos
 
@@ -86,7 +91,19 @@ npm run seed
 npm run dev
 ```
 
-El seed crea categorías, productos de ejemplo y un administrador con `SEED_ADMIN_*`. Usarlo solo sobre una base de desarrollo/pruebas; rechaza `NODE_ENV=production`. Las migraciones actuales no habilitan unaccent automáticamente. La API local usa por defecto `http://localhost:3000`; health check: `GET /api/health`.
+El seed crea categorías, productos de ejemplo y un administrador con `SEED_ADMIN_*`. Usarlo solo sobre una base de desarrollo/pruebas; rechaza `NODE_ENV=production`. Las migraciones actuales no habilitan `unaccent` automáticamente.
+
+La API local usa por defecto:
+
+```text
+http://localhost:3000
+```
+
+Health check:
+
+```http
+GET /api/health
+```
 
 En otra terminal desde la raíz:
 
@@ -97,7 +114,17 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-El frontend local usa normalmente `http://localhost:5173`. Configurar ese origen en `CORS_ORIGINS` y `VITE_API_URL=http://localhost:3000/api`.
+El frontend local usa normalmente:
+
+```text
+http://localhost:5173
+```
+
+Configurar ese origen en `CORS_ORIGINS` y:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
 
 ## Variables de entorno
 
@@ -114,7 +141,9 @@ Los ejemplos versionados contienen nombres y valores públicos; los secretos se 
 | `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Administrador inicial del seed de desarrollo/pruebas. |
 | `TEST_ADMIN_PASSWORD` | Contraseña del admin de la base de pruebas. |
 
-Frontend: `VITE_API_URL` es la URL pública del backend. Las variables `VITE_*` se incorporan al cliente: no deben contener secretos. Nunca versionar `.env`, tokens ni credenciales reales.
+Frontend: `VITE_API_URL` es la URL pública del backend. Las variables `VITE_*` se incorporan al cliente y no deben contener secretos.
+
+Nunca versionar `.env`, tokens ni credenciales reales.
 
 ## Comandos principales
 
@@ -131,31 +160,76 @@ Frontend: `VITE_API_URL` es la URL pública del backend. Las variables `VITE_*` 
 
 ## Testing y CI
 
-Los tests backend escriben datos: usar una base exclusiva de pruebas con unaccent, migraciones y seed. La suite espera `admin@showroom.com`; establecer `SEED_ADMIN_EMAIL` con ese valor y `TEST_ADMIN_PASSWORD` igual a `SEED_ADMIN_PASSWORD`. Usar `NODE_ENV=test` y un `JWT_SECRET` ficticio exclusivo de pruebas. Los valores Cloudinary pueden ser ficticios no vacíos para la suite actual: upload se simula y el borrado probado evita el proveedor. Esto no valida errores reales de Cloudinary ni supone un bloqueo global de red.
+Los tests backend escriben datos, por lo que deben ejecutarse sobre una base exclusiva de pruebas con `unaccent`, migraciones y seed.
+
+La suite espera `admin@showroom.com`; establecer `SEED_ADMIN_EMAIL` con ese valor y `TEST_ADMIN_PASSWORD` igual a `SEED_ADMIN_PASSWORD`.
+
+Usar `NODE_ENV=test` y un `JWT_SECRET` ficticio exclusivo de pruebas.
+
+Los valores de Cloudinary pueden ser ficticios no vacíos para la suite actual: el upload se simula y el borrado probado evita el proveedor. Esto no valida errores reales de Cloudinary ni supone un bloqueo global de red.
 
 ```powershell
 cd backend
 npm test
+
 cd ../frontend
 npm run lint
 npm run build
+
 cd ..
 git diff --check
 ```
 
-GitHub Actions ejecuta esos controles por push y PR a main, instala con `npm ci` y prepara PostgreSQL efímero desde cero. No realiza deploy ni usa secretos reales de aplicación.
+GitHub Actions ejecuta estos controles por push y Pull Request hacia `main`, instala dependencias con `npm ci` y prepara PostgreSQL efímero desde cero.
 
-Scripts SDD desde la raíz:
+Actualmente el workflow no realiza deployment ni utiliza secretos reales de aplicación.
+
+### Scripts SDD
+
+Desde la raíz:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/sdd-status.ps1
 powershell -ExecutionPolicy Bypass -File scripts/sdd-check.ps1
 ```
 
-`sdd-status` consulta el estado local; `sdd-check` ejecuta fetch y verificaciones técnicas, usando la configuración local del backend. Antes de ejecutarlo, asegurar que las pruebas apuntan a una base exclusiva. La CLI OpenSpec debe estar disponible para sus validaciones.
+`SDD Status` consulta el estado local del proyecto.
 
-## Estado MVP v1
+`SDD Check` ejecuta verificaciones técnicas y validaciones asociadas al workflow. Antes de ejecutarlo, asegurar que las pruebas apuntan a una base exclusiva.
 
-MVP v1 funcionalmente cerrado. La regresión final aprobó 71/71 tests backend, lint y build frontend; la QA funcional aprobó catálogo, filtros, detalle, galería, WhatsApp en desktop, login, administración, productos, categorías, imágenes y logout. SL-41 está Done/Listo, el OpenSpec fue archivado y los cambios fueron publicados. Como limitación de QA, no se reprodujo manualmente el fallo de refetch posterior a una mutación exitosa; queda cubierto por implementación/tests. La sesión usa localStorage por decisión de MVP v1; cookies httpOnly, refresh tokens y revocación se difieren.
+La CLI OpenSpec debe estar disponible para sus validaciones.
 
-Consultar [spec MVP](docs/sdd/MVP-V1-FINAL-SPEC.md), [estado y evidencia](docs/sdd/SDD-PROGRESS.md), [casos de uso](docs/sdd/08_Use_Cases.md) y [workflow](docs/sdd/SDD-WORKFLOW.md). Las pruebas técnicas no sustituyen el QA manual.
+## ✅ Estado MVP v1
+
+El MVP v1 se encuentra funcionalmente completado.
+
+La versión actual incluye:
+
+- Catálogo público de productos.
+- Búsqueda, filtros y paginación.
+- Detalle y galería de imágenes.
+- Integración con WhatsApp.
+- Login y autenticación JWT.
+- Administración de productos, categorías e imágenes.
+- Publicación y despublicación de productos.
+- Manejo centralizado de errores.
+- Testing automatizado.
+- Integración continua con GitHub Actions.
+
+### Validación
+
+- Backend: **71/71 tests aprobados**
+- Frontend: **lint OK**
+- Frontend: **build OK**
+- QA funcional de los principales flujos: **OK**
+
+La sesión utiliza `localStorage` como decisión del MVP v1. Mejoras como cookies `httpOnly`, refresh tokens y revocación de tokens quedan contempladas para futuras versiones.
+
+Para más detalle consultar:
+
+- [Especificación MVP](docs/sdd/MVP-V1-FINAL-SPEC.md)
+- [Estado y evidencia](docs/sdd/SDD-PROGRESS.md)
+- [Casos de uso](docs/sdd/08_Use_Cases.md)
+- [Workflow SDD](docs/sdd/SDD-WORKFLOW.md)
+
+> Las capturas del sistema se agregarán más adelante cuando estén listas.
