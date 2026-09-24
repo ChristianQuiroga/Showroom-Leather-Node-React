@@ -114,6 +114,6 @@ powershell -ExecutionPolicy Bypass -File scripts/sdd-check.ps1
 
 ## Estado MVP v1
 
-En cierre y QA final; no se declara terminado. El QA técnico del 2026-09-21 aprobó 61 tests backend, lint y build. Quedan validaciones manuales de WhatsApp, alta de productos y categorías, smoke/regresión integral, consistencia de imágenes ante fallos y revisión final de Jira/deuda. La sesión usa localStorage por decisión de MVP v1; cookies httpOnly, refresh tokens y revocación se difieren.
+MVP v1 funcionalmente cerrado. La regresión final aprobó 71/71 tests backend, lint y build frontend; la QA funcional aprobó catálogo, filtros, detalle, galería, WhatsApp en desktop, login, administración, productos, categorías, imágenes y logout. SL-41 está Done/Listo, el OpenSpec fue archivado y los cambios fueron publicados. Como limitación de QA, no se reprodujo manualmente el fallo de refetch posterior a una mutación exitosa; queda cubierto por implementación/tests. La sesión usa localStorage por decisión de MVP v1; cookies httpOnly, refresh tokens y revocación se difieren.
 
 Consultar [spec MVP](docs/sdd/MVP-V1-FINAL-SPEC.md), [estado y evidencia](docs/sdd/SDD-PROGRESS.md), [casos de uso](docs/sdd/08_Use_Cases.md) y [workflow](docs/sdd/SDD-WORKFLOW.md). Las pruebas técnicas no sustituyen el QA manual.

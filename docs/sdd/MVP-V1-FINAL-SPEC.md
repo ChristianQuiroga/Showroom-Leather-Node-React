@@ -1,8 +1,8 @@
 # Showroom Leather — MVP v1 Finalization Spec
 
 **Proyecto:** Showroom-Leather-Node-React  
-**Estado:** QA técnico aprobado parcialmente; cierre manual del MVP pendiente
-**Objetivo:** cerrar y estabilizar el MVP v1 mediante Spec-Driven Development (SDD).
+**Estado:** MVP v1 funcionalmente cerrado; QA y regresión consolidadas aprobadas. SL-41 está Done/Listo y su OpenSpec fue archivado y publicado.
+**Objetivo:** mantener trazabilidad del MVP v1 mediante Spec-Driven Development (SDD).
 
 ## 1. Propósito
 
@@ -496,12 +496,8 @@ No quedan findings abiertos de esa lista. La estrategia avanzada de sesión se c
 - tests backend verdes.
 
 ### P1 — Debe resolverse para MVP v1
-- limpiar filtros: resuelto en SL-30;
-- galería pública: resuelta en SL-31;
-- productos inactivos/reactivación: resuelto en SL-34;
-- regresión final;
-- seguridad;
-- limit final.
+
+No quedan asuntos P1 abiertos para el cierre funcional. Limpiar filtros (SL-30), galería pública (SL-31), productos inactivos/reactivación (SL-34), seguridad, regresión final y consistencia de imágenes fueron resueltos y verificados según la evidencia consolidada.
 
 ### P2 — Puede quedar como deuda controlada
 - estrategia avanzada de sesión: deuda futura acordada en SL-33;
@@ -517,25 +513,25 @@ No quedan findings abiertos de esa lista. La estrategia avanzada de sesión se c
 - [x] Paginación funciona.
 - [x] Detalle completo.
 - [x] Galería pública.
-- [ ] WhatsApp funciona.
+- [x] WhatsApp funciona.
 - [x] Login/logout funcionan.
 - [x] JWT protege admin.
-- [ ] Crear/editar productos.
+- [x] Crear/editar productos.
 - [x] Admin ve/reactiva inactivos.
-- [ ] Categorías CRUD + reactivación.
+- [x] Categorías CRUD + reactivación.
 - [x] Imágenes CRUD + principal.
 - [x] Feedback de errores.
 - [x] Sin divergencias UI/PostgreSQL/Cloudinary.
 - [x] Tests backend pasan.
-- [ ] Smoke test final pasa.
-- [ ] Regression test final pasa.
+- [x] Smoke test final pasa.
+- [x] Regression test final pasa.
 - [x] Secretos protegidos.
 - [x] README actualizado.
 - [ ] Jira refleja cierre o deuda diferida.
 
 ### Evidencia de cumplimiento
 
-Estado contrastado con `SDD-PROGRESS.md` y QA técnico del 2026-09-21; no se declara cerrado el MVP completo ni se sustituye QA manual por análisis de código.
+Estado contrastado con `SDD-PROGRESS.md`, QA funcional consolidada y regresión técnica final. El MVP v1 se declara cerrado funcionalmente; la limitación de refetch no reproducida manualmente queda registrada como limitación de QA, no como bloqueo.
 
 - Catálogo sin login, búsqueda/filtros y paginación: SL-30, SL-34 y Validación manual — navegación, paginación y sesión.
 - Detalle y galería: QA mobile de SL-32, galería de SL-31 y acceso público validado en SL-36/SL-39; datos esperados documentados en esta spec y UC-03 de `08_Use_Cases.md`.
@@ -548,20 +544,16 @@ Estado contrastado con `SDD-PROGRESS.md` y QA técnico del 2026-09-21; no se dec
 - Secretos protegidos: .env ignorados y no versionados, ejemplos sin secretos, configuración backend por entorno y sin credenciales en variables frontend. Búsqueda por coincidencia exacta de seis valores sensibles locales sin hallazgos en archivos versionados. Alcance: estado actual; no certifica historial Git, infraestructura externa ni rotación de credenciales. Respuesta 500 en NODE_ENV=production verificada sin stack ni mensaje interno.
 - README: completado con instalación, variables, base/unaccent, comandos, tests y estado real del MVP.
 
-### Pendientes de evidencia o cierre
+### Pendiente administrativo residual
 
-- WhatsApp: UC-04 documenta el flujo, pero no hay una validación de apertura Web/app y mensaje registrada en SDD-PROGRESS.
-- Crear/editar productos: edición y refetch validados en SL-32/SL-34/SL-37/SL-38; falta evidencia explícita del flujo completo de alta desde UI. El criterio combinado permanece sin marcar.
-- Categorías CRUD + reactivación: comportamiento documentado en UC-09; falta registro de validación integral.
 - Sin divergencias UI/PostgreSQL/Cloudinary: cerrado mediante `close-mvp-image-consistency`, con cobertura automatizada y QA manual. No se reprodujo manualmente el fallo de refetch posterior a una mutación exitosa; queda como limitación de QA respaldada por implementación/tests, no como fallo.
-- Smoke test final y regression test final: las pruebas por work item no acreditan una ejecución final integral del MVP.
-- Jira refleja cierre o deuda diferida: hay cierres de work items confirmados, pero no constancia de revisión final del MVP y trazabilidad de toda la deuda diferida.
+- Jira refleja cierre o deuda diferida: SL-41 está confirmado como Done/Listo. No se informa un ID ni estado de un eventual work item Jira general del MVP, por lo que ese aspecto administrativo queda sin evidencia.
 
 ### Límites y hallazgos del QA técnico final
 
 - ProductForm conserva datos ante rechazo y limpia el alta solo tras éxito; categorías y gestores muestran errores y liberan estados de operación al completar/rechazar las promesas. No hay timeout explícito en apiClient: una solicitud que nunca finaliza puede mantener loading; no se certifica ausencia absoluta de bloqueos sin QA interactivo.
-- App.jsx solo registra en consola los errores de carga de categorías. La versión publicada refresca categorías al volver del gestor y filtra las inactivas en ProductForm; el flujo integral todavía requiere validación manual.
-- ProductForm recibe desde App.jsx solo categorías activas y el backend también rechaza categorías inactivas. La corrección está publicada en `0caa67d`; registrar el flujo de categorías en QA manual, sin asumir que el CRUD integral esté validado.
+- App.jsx solo registra en consola los errores de carga de categorías. La versión publicada refresca categorías al volver del gestor y filtra las inactivas en ProductForm; el flujo integral fue aprobado en QA funcional.
+- ProductForm recibe desde App.jsx solo categorías activas y el backend también rechaza categorías inactivas. La corrección está publicada en `0caa67d` y el CRUD/reactivación fueron validados en QA funcional.
 - `close-mvp-image-consistency` cambió delete a PostgreSQL-first, mantiene compensación de upload y registra fallos remotos. Persisten dos riesgos aceptados: cleanup fallido puede dejar un asset huérfano y destroy fallido después del commit PostgreSQL requiere reconciliación manual.
 
 ## 24. Flujo de trabajo SDD final

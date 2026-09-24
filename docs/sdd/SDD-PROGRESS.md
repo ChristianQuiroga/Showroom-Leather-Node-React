@@ -4,7 +4,7 @@
 
 **Change:** `close-mvp-image-consistency`
 **Jira:** `SL-41` — "Cerrar consistencia de imágenes del MVP v1" — Done/Listo confirmado por el developer.
-**Estado:** implementación y QA manual aprobados; listo para commit y archive.
+**Estado:** MVP v1 funcionalmente cerrado; SL-41 está Done/Listo, el OpenSpec fue archivado y los cambios fueron publicados.
 
 ### Evidencia automatizada
 
@@ -24,6 +24,9 @@
 - Botones de mutación bloqueados durante operaciones y protección observable contra clicks duplicados.
 - Catálogo público y detalle con galería sin regresiones.
 - Consola del navegador sin errores ni warnings.
+- Productos y categorías: QA funcional aprobado.
+- WhatsApp: QA aprobado en desktop, con destinatario y mensaje de producto correctos.
+- Catálogo, búsqueda/filtros, detalle, login, administración y logout: aprobados.
 
 ### Limitación y riesgos residuales
 
@@ -33,14 +36,15 @@
 
 ## QA técnico final MVP v1 — 2026-09-21
 
-**Resultado:** verificación técnica aprobada con pendientes manuales y hallazgos documentados; no se declara cierre integral del MVP. Se revisaron la spec, los casos de uso, los registros SL-30 a SL-39 y el código actual. La revisión se realizó sobre una copia local anterior; el estado actual de `main` está publicado en `0caa67d`. La corrección de sincronización de categorías de `frontend/src/App.jsx` quedó publicada en ese commit. `FRONTEND-UI-CONTEXT.md` permanece untracked e intacto.
+**Resultado:** verificación técnica y QA funcional final aprobados; el MVP v1 queda cerrado funcionalmente. Se revisaron la spec, los casos de uso, los registros de work items y el código actual. `FRONTEND-UI-CONTEXT.md` permanece untracked e intacto.
 
 ### Pruebas ejecutadas
 
-- Backend `npm test`: 2 suites, 61/61 tests aprobados con Node 24 y PostgreSQL 18.3 temporal en puerto 55439. Base vacía, unaccent, cinco migraciones y seed de prueba; variables ficticias y carga de .env real deshabilitada. No se utilizó la base de desarrollo. Instancia temporal detenida al finalizar.
+- Backend `npm test`: 4 suites, 71/71 tests aprobados con Node 24 y PostgreSQL 18.3 temporal. Base vacía, unaccent, migraciones y seed de prueba; variables ficticias y carga de .env real deshabilitada. No se utilizó la base de desarrollo.
 - Frontend `npm run lint` y `npm run build`: aprobados sobre el working tree, incluida la modificación local previa de App.jsx. No acredita QA manual ni validación exclusiva del HEAD publicado.
 - Comprobación directa de errorHandler con NODE_ENV=production: error inesperado devuelve 500 genérico sin stack ni detalle interno.
 - `git diff --check`: aprobado. No se cambiaron dependencias ni lockfiles.
+- OpenSpec activos: ninguno; `main` sincronizada con `origin/main` (ahead/behind 0/0).
 
 ### Revisión de flujos y evidencia
 
@@ -48,13 +52,13 @@
 | --- | --- |
 | Catálogo, búsqueda, filtros, paginación | App.jsx y product.repository/service: búsqueda parametrizada con unaccent/ILIKE, filtros combinados, paginación y corrección de página; suite products y QA previo SL-30/SL-34. Límite backend 1–50, default 12; frontend solicita 4. |
 | Detalle y galería | ProductDetail usa Promise.allSettled, muestra fallo de galería sin perder detalle, principal/miniaturas; suite products y QA SL-31/SL-36/SL-39. |
-| WhatsApp | utils/whatsapp genera wa.me con mensaje codificado; ProductDetail consume whatsappUrl. No hay test dedicado ni nueva apertura real de Web/app: pendiente manual. |
+| WhatsApp | utils/whatsapp genera wa.me con mensaje codificado; ProductDetail consume whatsappUrl. Apertura y mensaje validados en desktop. |
 | Login/logout, sesión y JWT | auth.service usa bcrypt.compare, firma JWT con expiración; auth.middleware verifica firma y rol; App valida /auth/me, limpia 401/403, conserva token en otros errores y cierra por exp. Suite auth y QA SL-33. Revocación avanzada sigue diferida. |
-| Crear/editar productos | ProductForm, servicios y tests POST/PUT revisados; datos conservados en error y limpieza del alta tras éxito. Edición con datos del listado admin, coherente con SL-36. Falta QA manual integral del alta. |
-| Categorías | CategoryManager, categoryService y rutas/service/repository soportan CRUD, activar/desactivar, 400/404/409 y JWT admin. No existe suite de categorías ni evidencia nueva de QA manual: permanece pendiente. |
+| Crear/editar productos | ProductForm, servicios y tests POST/PUT revisados; datos conservados en error y limpieza del alta tras éxito. Alta y edición validadas en QA funcional. |
+| Categorías | CategoryManager, categoryService y rutas/service/repository soportan CRUD, activar/desactivar, 400/404/409 y JWT admin. CRUD y reactivación validados en QA funcional. |
 | Imágenes | `close-mvp-image-consistency`: upload con compensación, delete PostgreSQL-first, destroy posterior, `setAsMain` transaccional, 71 tests y QA manual aprobada. La limitación de no reproducir manualmente el fallo de refetch queda registrada; los riesgos residuales de cleanup/destroy requieren reconciliación manual. |
 | Actividad y visibilidad | Suite products verifica desactivación/reactivación, 401/403/404/409 y activo/publicado; reactivar no publica. |
-| Navegación admin | App conserva estado de ProductManager, callbacks de regreso y refresco; respaldo manual SL-34/SL-38. El nuevo refresco local de categorías no tiene QA manual en esta sesión. |
+| Navegación admin | App conserva estado de ProductManager, callbacks de regreso y refresco; navegación administrativa y logout aprobados en QA final. |
 
 ### Seguridad mínima
 
@@ -66,21 +70,21 @@
 
 ### Hallazgos y límites
 
-- La carga de categorías en App.jsx informa errores solo por consola. La versión publicada refresca categorías al regresar del gestor y filtra las inactivas en ProductForm; el flujo integral todavía requiere validación manual.
-- ProductForm recibe solo categorías activas desde App.jsx; el backend también rechaza categorías inactivas. La corrección está publicada en `0caa67d`, pero el flujo integral de categorías todavía requiere validación manual.
+- La carga de categorías en App.jsx informa errores solo por consola; el flujo de CRUD, reactivación y sincronización quedó validado funcionalmente.
+- ProductForm recibe solo categorías activas desde App.jsx y el backend también rechaza categorías inactivas. La corrección está publicada y validada en el flujo administrativo.
 - Los handlers con loading lo liberan en finally o tras resolver/rechazar la carga; apiClient no define timeout. No se garantiza liberación ante peticiones indefinidamente pendientes.
 - El cambio `close-mvp-image-consistency` corrigió el orden delete PostgreSQL-first, agregó compensación y cobertura de fallos parciales. Un cleanup fallido puede dejar un asset huérfano y un destroy fallido posterior al commit PostgreSQL requiere reconciliación manual. El fallo de refetch posterior a una mutación exitosa no se reprodujo manualmente, pero está respaldado por implementación y tests.
-- No se detectaron fallos en los comandos ejecutados. Lo anterior no es una aprobación de smoke/regresión manual integral.
+- No se detectaron fallos en los comandos ejecutados ni en la QA funcional consolidada.
 
 ### Documentación y DoD
 
 README completado con objetivo, stack, estructura, requisitos, instalación, variables sin secretos, migraciones/unaccent, seed, comandos, tests y estado del MVP. Spec corregida para reflejar la precarga administrativa actual y distinguir evidencia técnica/manual.
 
-Se cierran README, protección de secretos y consistencia UI/PostgreSQL/Cloudinary con el alcance indicado: **15/21 puntos DoD completos**. Permanecen abiertos WhatsApp, crear/editar (alta UI), categorías CRUD/reactivación, smoke final, regresión final y revisión global de cierre/deuda en Jira.
+Se cierran README, protección de secretos, consistencia UI/PostgreSQL/Cloudinary y la QA funcional consolidada: **20/21 puntos DoD completos**. El único punto sin evidencia formal es el estado de un eventual work item Jira general del MVP; SL-41 sí está confirmado como Done/Listo.
 
 ## Fase actual
 
-MVP v1 — Revisión, estabilización y QA final
+MVP v1 — Cerrado funcionalmente; queda solo la trazabilidad de cualquier work item Jira general que exista.
 
 ## Spec principal
 
