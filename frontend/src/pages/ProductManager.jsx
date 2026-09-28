@@ -10,7 +10,6 @@ import {
 function ProductManager({
   token,
   categories,
-  onBack,
   onEdit,
   onManageImages,
   onAuthError,
@@ -117,15 +116,7 @@ function ProductManager({
   return (
     <main className="product-manager-page">
       <section className="product-manager-card">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={actionProductId !== null}
-        >
-          Volver
-        </button>
-
-        <h1>Administrar productos</h1>
+        <h1>Gestionar productos</h1>
 
         <div className="product-filters">
           <input

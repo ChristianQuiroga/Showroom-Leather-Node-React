@@ -19,7 +19,7 @@ export const login = async ({ email, password }) => {
   }
 
   if (!user.is_active) {
-    throw new AppError("Usuario inactivo", 403);
+    throw new AppError("Credenciales inválidas", 401);
   }
 
   const passwordIsValid = await bcrypt.compare(password, user.password_hash);

@@ -134,7 +134,7 @@ function CategoryManager({ token, onBack, onAuthError }) {
           Volver
         </button>
 
-        <h1>Administrar categorías</h1>
+        <h1>Gestionar categorías</h1>
 
         <form onSubmit={handleSubmit}>
           <label>

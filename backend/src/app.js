@@ -25,6 +25,12 @@ app.use(
   }),
 );
 
+app.get("/api/contact", (req, res) => {
+  const phone = String(env.whatsapp.phone || "").replace(/\D/g, "");
+  const message = "Hola, quiero consultar por las prendas del showroom.";
+  res.status(200).json({ whatsappUrl: phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : null });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);

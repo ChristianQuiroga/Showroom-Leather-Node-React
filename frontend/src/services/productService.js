@@ -5,7 +5,7 @@ const buildProductQuery = ({
   status = "",
   categoryId = "",
   page = 1,
-  limit = 4,
+  limit = 6,
 } = {}) => {
   const params = new URLSearchParams();
 
