@@ -25,15 +25,22 @@ function ProductCard({
   onDeactivate,
   actionLoading = false,
   showAdminState = false,
+  isFavorite = false,
+  onToggleFavorite,
 }) {
   return (
-    <article className="product-card" onClick={onSelect}>
-      {product.main_image_url ? (
-        <img
-          className="product-card__image"
-          src={product.main_image_url}
-          alt={product.name}
-        />
+    <article className="product-card">
+      {onToggleFavorite && (
+        <button className={`favorite-toggle${isFavorite ? " favorite-toggle--active" : ""}`} type="button" onClick={onToggleFavorite} aria-label={`${isFavorite ? "Quitar de" : "Agregar a"} favoritos: ${product.name}`} aria-pressed={isFavorite} title={isFavorite ? "Quitar de favoritos" : "Guardar en favoritos"}>
+          {isFavorite ? "★" : "☆"}
+        </button>
+      )}
+      {onSelect ? (
+        <button className="product-card__image-button" type="button" onClick={onSelect} aria-label={`Ver detalle de ${product.name}`}>
+          {product.main_image_url ? <img className="product-card__image" src={product.main_image_url} alt={product.name} /> : <span className="product-card__placeholder">Sin imagen</span>}
+        </button>
+      ) : product.main_image_url ? (
+        <img className="product-card__image" src={product.main_image_url} alt={product.name} />
       ) : (
         <div className="product-card__placeholder">Sin imagen</div>
       )}
@@ -57,6 +64,12 @@ function ProductCard({
           <strong>Estado:</strong> {formatStatus(product.status)}
         </p>
 
+        {onSelect && (
+          <button className="product-card__view" type="button" onClick={onSelect}>
+            Ver detalle <span aria-hidden="true">→</span>
+          </button>
+        )}
+
         {showAdminState && (
           <>
             <p>
@@ -70,51 +83,55 @@ function ProductCard({
           </>
         )}
 
-        {onEdit && (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit();
-            }}
-          >
-            Editar
-          </button>
-        )}
-        {onManageImages && (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onManageImages();
-            }}
-          >
-            Gestionar imágenes
-          </button>
-        )}
-        {onDeactivate && (
-          <button
-            type="button"
-            disabled={actionLoading}
-            onClick={(event) => {
-              event.stopPropagation();
-              onDeactivate();
-            }}
-          >
-            {actionLoading ? "Desactivando..." : "Desactivar"}
-          </button>
-        )}
-        {onActivate && (
-          <button
-            type="button"
-            disabled={actionLoading}
-            onClick={(event) => {
-              event.stopPropagation();
-              onActivate();
-            }}
-          >
-            {actionLoading ? "Activando..." : "Activar"}
-          </button>
+        {showAdminState && (
+          <div className="product-card__actions">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit();
+              }}
+            >
+              Editar
+            </button>
+          )}
+          {onManageImages && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onManageImages();
+              }}
+            >
+              Gestionar imágenes
+            </button>
+          )}
+          {onDeactivate && (
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDeactivate();
+              }}
+            >
+              {actionLoading ? "Desactivando..." : "Desactivar"}
+            </button>
+          )}
+          {onActivate && (
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={(event) => {
+                event.stopPropagation();
+                onActivate();
+              }}
+            >
+              {actionLoading ? "Activando..." : "Activar"}
+            </button>
+          )}
+          </div>
         )}
       </div>
     </article>

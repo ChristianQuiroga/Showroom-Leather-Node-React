@@ -1,5 +1,15 @@
 # Showroom Leather — SDD Progress
 
+## Interfaz artesanal y mejoras del showroom — 2026-09-27
+
+**Estado:** cambios aprobados visualmente por el developer en su entorno local; integración preparada en `feature/showroom-artesanal-ui`. No se identificó un work item de Jira para esta ampliación ni se archivó un OpenSpec; quedan pendientes de trazabilidad.
+
+- Portada artesanal, catálogo de seis prendas por página, tarjetas alineadas, foto y enlace de detalle, favoritos persistidos en el navegador y comparación de hasta tres prendas.
+- Administración accesible mediante `#admin`, con gestión de productos como pantalla inicial, navegación activa y títulos de sección. La autenticación JWT y las rutas protegidas siguen en el backend.
+- Cinco fallos de login por cuenta o treinta por IP bloquean durante quince minutos con HTTP 429 y `Retry-After`. El contador vive en memoria y no se comparte entre instancias.
+- Enlaces de WhatsApp por producto y contacto general en el pie, con icono verde. La portada usa `frontend/public/assets/hero-artesanal.jpeg`.
+- Verificación de esta integración: frontend `npm run lint` y `npm run build` aprobados; prueba unitaria del límite de login aprobada. Suite completa del backend no ejecutable aquí sin `DATABASE_URL`; QA manual previa del developer confirmó filtros, WhatsApp y navegación visual. No se declara QA de despliegue.
+
 ## Cierre técnico de consistencia de imágenes — 2026-09-23
 
 **Change:** `close-mvp-image-consistency`
